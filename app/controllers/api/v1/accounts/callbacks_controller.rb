@@ -14,14 +14,12 @@ class Api::V1::Accounts::CallbacksController < Api::V1::Accounts::BaseController
       @facebook_inbox = Current.account.inboxes.create!(name: inbox_name, channel: facebook_channel, queue_kind: 'dm')
       set_instagram_id(page_access_token, facebook_channel)
       set_avatar(@facebook_inbox, page_id)
-      # Banking demo: provision Mentions + Visitor Posts + Comments queues
-      # alongside the Messenger DM inbox so the Moderation Center / simulators
-      # have somewhere to route that traffic. Backed by Channel::Api (no live
-      # FB webhook wiring) and keyed by inboxes.queue_kind. Visitor Posts and
-      # Comments share queue_kind='public' — they're differentiated by name.
-      create_companion_inbox(name: "#{inbox_name} – Mentions",       queue_kind: 'mentions')
-      create_companion_inbox(name: "#{inbox_name} – Visitor Posts",  queue_kind: 'public')
-      create_companion_inbox(name: "#{inbox_name} – Comments",       queue_kind: 'public')
+      # Channel::FacebookPage after_create callbacks (ensure_public_inbox /
+      # ensure_mentions_inbox / ensure_visitor_posts_inbox) already create the
+      # companion inboxes bound to the same channel so replies flow back
+      # through Graph API. Nothing to do here beyond tagging them with the
+      # queue_kind used by simulators + Moderation Center.
+      tag_companion_queue_kinds(facebook_channel)
     end
   rescue StandardError => e
     ChatwootExceptionTracker.new(e).capture_exception
@@ -128,8 +126,9 @@ class Api::V1::Accounts::CallbacksController < Api::V1::Accounts::BaseController
     Avatar::AvatarFromUrlJob.perform_later(facebook_inbox, avatar_url)
   end
 
-  def create_companion_inbox(name:, queue_kind:)
-    channel = Channel::Api.create!(account: Current.account)
-    Current.account.inboxes.create!(name: name, channel: channel, queue_kind: queue_kind)
+  def tag_companion_queue_kinds(facebook_channel)
+    facebook_channel.public_inbox&.update!(queue_kind: 'public')
+    facebook_channel.visitor_posts_inbox&.update!(queue_kind: 'public')
+    facebook_channel.mentions_inbox&.update!(queue_kind: 'mentions')
   end
 end
