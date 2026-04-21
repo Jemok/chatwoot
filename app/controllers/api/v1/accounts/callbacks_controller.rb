@@ -11,9 +11,15 @@ class Api::V1::Accounts::CallbacksController < Api::V1::Accounts::BaseController
         page_id: page_id, user_access_token: user_access_token,
         page_access_token: page_access_token
       )
-      @facebook_inbox = Current.account.inboxes.create!(name: inbox_name, channel: facebook_channel)
+      @facebook_inbox = Current.account.inboxes.create!(name: inbox_name, channel: facebook_channel, queue_kind: 'dm')
       set_instagram_id(page_access_token, facebook_channel)
       set_avatar(@facebook_inbox, page_id)
+      # Banking demo: provision Mentions + Public comment queues alongside the
+      # Messenger DM inbox so the Moderation Center / simulators have somewhere
+      # to route that traffic. These are backed by Channel::Api (no live FB
+      # webhook wiring yet) and keyed by inboxes.queue_kind.
+      create_companion_inbox(name: "#{inbox_name} – Mentions", queue_kind: 'mentions')
+      create_companion_inbox(name: "#{inbox_name} – Public",   queue_kind: 'public')
     end
   rescue StandardError => e
     ChatwootExceptionTracker.new(e).capture_exception
@@ -118,5 +124,10 @@ class Api::V1::Accounts::CallbacksController < Api::V1::Accounts::BaseController
   def set_avatar(facebook_inbox, page_id)
     avatar_url = "https://graph.facebook.com/#{page_id}/picture?type=large"
     Avatar::AvatarFromUrlJob.perform_later(facebook_inbox, avatar_url)
+  end
+
+  def create_companion_inbox(name:, queue_kind:)
+    channel = Channel::Api.create!(account: Current.account)
+    Current.account.inboxes.create!(name: name, channel: channel, queue_kind: queue_kind)
   end
 end
