@@ -14,12 +14,14 @@ class Api::V1::Accounts::CallbacksController < Api::V1::Accounts::BaseController
       @facebook_inbox = Current.account.inboxes.create!(name: inbox_name, channel: facebook_channel, queue_kind: 'dm')
       set_instagram_id(page_access_token, facebook_channel)
       set_avatar(@facebook_inbox, page_id)
-      # Banking demo: provision Mentions + Public comment queues alongside the
-      # Messenger DM inbox so the Moderation Center / simulators have somewhere
-      # to route that traffic. These are backed by Channel::Api (no live FB
-      # webhook wiring yet) and keyed by inboxes.queue_kind.
-      create_companion_inbox(name: "#{inbox_name} – Mentions", queue_kind: 'mentions')
-      create_companion_inbox(name: "#{inbox_name} – Public",   queue_kind: 'public')
+      # Banking demo: provision Mentions + Visitor Posts + Comments queues
+      # alongside the Messenger DM inbox so the Moderation Center / simulators
+      # have somewhere to route that traffic. Backed by Channel::Api (no live
+      # FB webhook wiring) and keyed by inboxes.queue_kind. Visitor Posts and
+      # Comments share queue_kind='public' — they're differentiated by name.
+      create_companion_inbox(name: "#{inbox_name} – Mentions",       queue_kind: 'mentions')
+      create_companion_inbox(name: "#{inbox_name} – Visitor Posts",  queue_kind: 'public')
+      create_companion_inbox(name: "#{inbox_name} – Comments",       queue_kind: 'public')
     end
   rescue StandardError => e
     ChatwootExceptionTracker.new(e).capture_exception
