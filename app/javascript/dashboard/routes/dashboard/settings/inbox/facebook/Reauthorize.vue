@@ -77,7 +77,7 @@ export default {
           }
         },
         {
-          scope: 'pages_manage_metadata,pages_messaging,pages_show_list',
+          scope: 'pages_manage_metadata,pages_messaging,pages_show_list,business_management',
           auth_type: 'reauthorize',
         }
       );
