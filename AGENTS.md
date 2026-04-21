@@ -34,11 +34,11 @@
 
 ## Styling
 
-- **Tailwind Only**:  
-  - Do not write custom CSS  
-  - Do not use scoped CSS  
-  - Do not use inline styles  
-  - Always use Tailwind utility classes  
+- **Tailwind Only**:
+  - Do not write custom CSS
+  - Do not use scoped CSS
+  - Do not use inline styles
+  - Always use Tailwind utility classes
 - **Colors**: Refer to `tailwind.config.js` for color definitions
 
 ## General Guidelines
@@ -82,13 +82,37 @@
 - **Translations**:
   - Only update `en.yml` and `en.json`
   - Other languages are handled by the community
-  - Backend i18n → `en.yml`, Frontend i18n → `en.json`
-- **Frontend**:
-  - Use `components-next/` for message bubbles (the rest is being deprecated)
+  - Backend i18n → `config/locales/en.yml` (plus `enterprise/config/locales/en.yml` when applicable)
+  - Frontend i18n → English JSON files under `app/javascript/dashboard/i18n/locale/en/` (split into many `*.json` files), with parallel trees for `widget/`, `portal/`, `survey/`
+- **Frontend apps** (separate Vue entry points under `app/javascript/`):
+  - `dashboard/` – agent SPA (most work happens here)
+  - `widget/` – embeddable chat widget; `sdk/` – loader script for the widget
+  - `portal/` – help-center; `survey/`, `v3/`, `superadmin_pages/`
+  - Shared code in `app/javascript/shared/`; design tokens in `app/javascript/design-system/`
+  - Use `app/javascript/dashboard/components-next/` for message bubbles (the rest is being deprecated)
+- **Frontend state**: dual stack. Legacy Vuex modules in `app/javascript/dashboard/store/modules/` (built via `storeFactory.js`); new Pinia stores in `app/javascript/dashboard/stores/` (e.g. `calls.js`, `companies.js`) and `store/captain/`. Prefer Pinia for new modules.
+- **Frontend routes** live in `app/javascript/dashboard/routes/` (`index.js` + `dashboard/`), not `config/routes.rb`.
+- **API surfaces** (place new endpoints in the correct tree under `app/controllers/`):
+  - `api/v1/` – primary authenticated agent API
+  - `api/v2/` – next-gen endpoints
+  - `public/api/v1/` – unauthenticated portal/widget APIs
+  - `platform/api/v1/` – server-to-server platform API (platform-app token auth)
+  - `webhooks/`, `widget/`, and channel-specific controllers (`twilio/`, `instagram/`, `microsoft/`, …)
+  - Swagger source lives in `swagger/` and must be updated alongside API changes.
 
 ## Ruby Best Practices
 
 - Use compact `module/class` definitions; avoid nested styles
+- **Backend layering** — keep controllers thin and route work to:
+  - **Builders** (`app/builders/`) – orchestrate creation of complex aggregates (e.g. `ConversationBuilder`, `Messages::MessageBuilder`)
+  - **Finders** (`app/finders/`) – query/filter logic
+  - **Services** (`app/services/`) – stateless business operations; instantiated then `.perform`/`.perform!`
+  - **Listeners** (`app/listeners/`) extend `BaseListener` and subscribe via the Wisper-style **Dispatchers** in `app/dispatchers/` (`sync_dispatcher`, `async_dispatcher`, invoked through `EventDispatcherJob`)
+  - **Drops** (`app/drops/`) – Liquid presenters for templating; **Presenters** (`app/presenters/`) – view-model wrappers
+- **Pundit policies**: every API resource needs a matching `*_policy.rb` in `app/policies/`; controllers call `authorize` via `Api::V1::Accounts::BaseController`.
+- **Sidekiq jobs**: domain-grouped under `app/jobs/` (`conversations/`, `webhooks/`, `notification/`, …). Internal/maintenance/cron jobs live under `app/jobs/internal/` and are scheduled in `config/schedule.yml`. Use `MutexApplicationJob` for distributed locking. Queue names defined in `config/sidekiq.yml`.
+- **ActionCable**: single `RoomChannel` (`app/channels/room_channel.rb`); broadcasts go through `ActionCableListener` + `ActionCableBroadcastJob`. Don't add new channels — emit events through the dispatcher instead.
+- **Migrations** in `db/migrate/`: for indexes on large tables use `disable_ddl_transaction!` + `algorithm: :concurrently` (existing precedent). Schema is committed at `db/schema.rb`.
 
 ## Enterprise Edition Notes
 
@@ -107,6 +131,7 @@ Practical checklist for any change impacting core logic or public APIs
 - When renaming/moving shared code, mirror the change in `enterprise/` to prevent drift.
 - Tests: Add Enterprise-specific specs under `spec/enterprise`, mirroring OSS spec layout where applicable.
 - When modifying existing OSS features for Enterprise-only behavior, add an Enterprise module (via `prepend_mod_with`/`include_mod_with`) instead of editing OSS files directly—especially for policies, controllers, and services. For Enterprise-exclusive features, place code directly under `enterprise/`.
+- The Enterprise overlay is an autoload path (not a fork): `enterprise/app/` mirrors `app/`, and modules are wired in by `prepend_mod_with('ClassName')` calls placed at the **bottom** of the OSS file (see examples in `app/builders/*`, `app/services/*`, `app/controllers/api/v1/accounts_controller.rb`). When adding a new class that may need EE behavior, end the file with this hook.
 
 ## Branding / White-labeling note
 

@@ -134,6 +134,10 @@ export const useInbox = (inboxId = null) => {
     return channelType.value === INBOX_TYPES.TIKTOK;
   });
 
+  const isAThreadsChannel = computed(() => {
+    return channelType.value === INBOX_TYPES.THREADS;
+  });
+
   const isAVoiceChannel = computed(() => {
     return channelType.value === INBOX_TYPES.VOICE;
   });
@@ -156,6 +160,7 @@ export const useInbox = (inboxId = null) => {
     isAnEmailChannel,
     isAnInstagramChannel,
     isATiktokChannel,
+    isAThreadsChannel,
     isAVoiceChannel,
   };
 };

@@ -122,6 +122,17 @@ class ActionCableListener < BaseListener
     )
   end
 
+  # Banking demo (#6): viewing presence. Broadcast account-wide so the
+  # avatar-stack on the conversation header refreshes for everyone who has
+  # the conversation open or is browsing the inbox list.
+  def conversation_viewing_on(event)
+    broadcast_viewing(event, CONVERSATION_VIEWING_ON)
+  end
+
+  def conversation_viewing_off(event)
+    broadcast_viewing(event, CONVERSATION_VIEWING_OFF)
+  end
+
   def assignee_changed(event)
     conversation, account = extract_conversation_and_account(event)
     tokens = user_tokens(account, conversation.inbox.members)
@@ -194,6 +205,23 @@ class ActionCableListener < BaseListener
     agent_tokens = agents.pluck(:pubsub_token)
     admin_tokens = account.administrators.pluck(:pubsub_token)
     (agent_tokens + admin_tokens).uniq
+  end
+
+  # Banking demo (#6): viewing presence broadcast helper. Sends to every
+  # user in the account so the avatar stack stays consistent across tabs.
+  def broadcast_viewing(event, event_name)
+    conversation = event.data[:conversation]
+    account = conversation.account
+    user = event.data[:user]
+    tokens = account.users.pluck(:pubsub_token).compact
+
+    broadcast(
+      account,
+      tokens,
+      event_name,
+      conversation_id: conversation.display_id,
+      user: user.push_event_data
+    )
   end
 
   def contact_tokens(contact_inbox, message)

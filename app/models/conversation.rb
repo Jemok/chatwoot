@@ -117,6 +117,7 @@ class Conversation < ApplicationRecord
   before_save :ensure_snooze_until_reset
   before_create :determine_conversation_status
   before_create :ensure_waiting_since
+  before_create :inherit_source_type_from_inbox
 
   after_update_commit :execute_after_update_commit_callbacks
   after_create_commit :notify_conversation_creation
@@ -240,6 +241,12 @@ class Conversation < ApplicationRecord
 
   def ensure_waiting_since
     self.waiting_since = created_at
+  end
+
+  # Banking demo (#2): inherit source_type from inbox so per-source filtering works
+  # without each builder having to know about it.
+  def inherit_source_type_from_inbox
+    self.source_type ||= inbox&.source_type || 'dm'
   end
 
   def validate_additional_attributes

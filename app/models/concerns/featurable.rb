@@ -8,13 +8,26 @@ module Featurable
 
   FEATURE_LIST = YAML.safe_load(Rails.root.join('config/features.yml').read).freeze
 
+  # bigint (signed 8 bytes) can safely hold up to 63 flags per column.
+  # Additional features overflow into successive columns: feature_flags, feature_flags_2, ...
+  FEATURE_FLAGS_PER_COLUMN = 63
+
+  FEATURE_COLUMNS = FEATURE_LIST.each_with_index.each_with_object({}) do |(feature, index), result|
+    column_index = index / FEATURE_FLAGS_PER_COLUMN
+    column_name = column_index.zero? ? 'feature_flags' : "feature_flags_#{column_index + 1}"
+    result[column_name] ||= {}
+    result[column_name][(index % FEATURE_FLAGS_PER_COLUMN) + 1] = "feature_#{feature['name']}".to_sym
+  end.freeze
+
   FEATURES = FEATURE_LIST.each_with_object({}) do |feature, result|
     result[result.keys.size + 1] = "feature_#{feature['name']}".to_sym
   end
 
   included do
     include FlagShihTzu
-    has_flags FEATURES.merge(column: 'feature_flags').merge(QUERY_MODE)
+    FEATURE_COLUMNS.each do |column_name, flags|
+      has_flags flags.merge(column: column_name).merge(QUERY_MODE)
+    end
 
     before_create :enable_default_features
   end

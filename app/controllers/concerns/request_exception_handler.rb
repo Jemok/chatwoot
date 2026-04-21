@@ -14,6 +14,7 @@ module RequestExceptionHandler
     render_not_found_error('Resource could not be found')
   rescue Pundit::NotAuthorizedError => e
     log_handled_error(e)
+    log_denied_action(e)
     render_unauthorized('You are not authorized to do this action')
   rescue ActionController::ParameterMissing => e
     log_handled_error(e)
@@ -58,5 +59,19 @@ module RequestExceptionHandler
 
   def log_handled_error(exception)
     logger.info("Handled error: #{exception.inspect}")
+  end
+
+  # Banking demo (Phase 2 #4): write Pundit denials to the security audit feed.
+  def log_denied_action(_exception)
+    PolicyViolationLog.create!(
+      account_id: Current.account&.id,
+      user_id: Current.user&.id,
+      policy: 'denied_action',
+      action_attempted: "#{request.request_method} #{request.path}",
+      details: 'Pundit::NotAuthorizedError',
+      request_ip: request.remote_ip
+    )
+  rescue StandardError => e
+    Rails.logger.warn("[SecurityAudit] Pundit log error: #{e.message}")
   end
 end

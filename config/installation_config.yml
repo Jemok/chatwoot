@@ -416,6 +416,101 @@
   locked: true
 # ------- End of Instagram Channel Related Config ------- #
 
+# ------- Threads Channel Related Config ------- #
+- name: THREADS_APP_ID
+  display_title: 'Threads App ID'
+  locked: false
+- name: THREADS_APP_SECRET
+  display_title: 'Threads App Secret'
+  description: 'The App Secret used for Threads authentication'
+  locked: false
+  type: secret
+- name: THREADS_VERIFY_TOKEN
+  display_title: 'Threads Verify Token'
+  description: 'The verify token used for Threads Webhook'
+  locked: false
+  type: secret
+- name: THREADS_API_VERSION
+  display_title: 'Threads API Version'
+  description: 'Configure this if you want to use a different Threads API version. Make sure its prefixed with `v`'
+  value: 'v1.0'
+  locked: true
+# ------- End of Threads Channel Related Config ------- #
+
+# ------- LinkedIn Channel Related Config ------- #
+- name: LINKEDIN_APP_ID
+  display_title: 'LinkedIn App ID'
+  description: 'OAuth 2.0 Client ID from your LinkedIn developer app (Auth tab).'
+  locked: false
+- name: LINKEDIN_APP_SECRET
+  display_title: 'LinkedIn App Secret'
+  description: 'OAuth 2.0 Client Secret from your LinkedIn developer app.'
+  locked: false
+  type: secret
+- name: LINKEDIN_VERIFY_TOKEN
+  display_title: 'LinkedIn Verify Token'
+  description: 'Shared secret used to verify LinkedIn Event Notification webhook payloads.'
+  locked: false
+  type: secret
+- name: LINKEDIN_API_VERSION
+  display_title: 'LinkedIn API Version'
+  description: 'LinkedIn Versioned API release (YYYYMM). Sent in the LinkedIn-Version header.'
+  value: '202604'
+  locked: true
+# ------- End of LinkedIn Channel Related Config ------- #
+
+# ------- YouTube Channel Related Config ------- #
+- name: YOUTUBE_CLIENT_ID
+  display_title: 'YouTube OAuth Client ID'
+  description: 'OAuth 2.0 Client ID from your Google Cloud project (with YouTube Data API v3 enabled).'
+  locked: false
+- name: YOUTUBE_CLIENT_SECRET
+  display_title: 'YouTube OAuth Client Secret'
+  description: 'OAuth 2.0 Client Secret from your Google Cloud project.'
+  locked: false
+  type: secret
+- name: YOUTUBE_API_KEY
+  display_title: 'YouTube API Key (optional)'
+  description: 'Optional API key used for unauthenticated read-only calls.'
+  locked: false
+  type: secret
+- name: YOUTUBE_API_VERSION
+  display_title: 'YouTube Data API Version'
+  description: 'Configure this if you want to use a different YouTube Data API version.'
+  value: 'v3'
+  locked: true
+# ------- End of YouTube Channel Related Config ------- #
+
+# ------- X (Twitter) Channel Related Config ------- #
+- name: X_API_VERSION
+  display_title: 'X API Version'
+  description: 'Configure this if you want to use a different X API version. Make sure its prefixed with `v`'
+  value: 'v2'
+  locked: true
+- name: X_ENVIRONMENT_NAME
+  display_title: 'X Account Activity Environment (legacy)'
+  description: 'Legacy Premium Account Activity API environment label. Leave blank if using the v2 Webhooks API.'
+  locked: false
+- name: X_WEBHOOK_ID
+  display_title: 'X Webhook ID'
+  description: 'ID returned by POST /2/webhooks when you register your CRC URL. Used to subscribe each connected user to events.'
+  locked: false
+- name: X_BEARER_TOKEN
+  display_title: 'X Bearer Token (OAuth 2.0 App-Only)'
+  description: 'OAuth 2.0 App-Only Bearer Token from the X developer app (Keys & Tokens → Bearer Token). Required for managing v2 webhooks.'
+  locked: false
+  type: secret
+- name: X_CONSUMER_KEY
+  display_title: 'X Consumer Key (API Key)'
+  description: 'OAuth 1.0a Consumer API Key from the X (Twitter) developer app. Used for sign-in, DMs, tweets, and Account Activity webhooks.'
+  locked: false
+- name: X_CONSUMER_SECRET
+  display_title: 'X Consumer Secret (API Key Secret)'
+  description: 'OAuth 1.0a Consumer API Key Secret. Required for sign-in, signing API requests, and CRC validation of Account Activity webhooks.'
+  locked: false
+  type: secret
+# ------- End of X Channel Related Config ------- #
+
 # ------- TikTok Channel Related Config ------- #
 - name: TIKTOK_API_VERSION
   display_title: 'TikTok API Version'

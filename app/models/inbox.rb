@@ -77,6 +77,14 @@ class Inbox < ApplicationRecord
 
   enum sender_name_type: { friendly: 0, professional: 1 }
 
+  # Banking demo: queue grouping for sidebar/filter (#1, #2, #7, #9 in demo gap analysis).
+  # Source-type tags the surface (dm / comments / wall_posts / mentions) so a single channel
+  # can be split into multiple operational queues without new tables.
+  QUEUE_KINDS = %w[dm public mentions].freeze
+  SOURCE_TYPES = %w[dm comments wall_posts mentions].freeze
+
+  before_validation :assign_queue_defaults, on: :create
+
   after_destroy :delete_round_robin_agents
 
   after_create_commit :dispatch_create_event
@@ -128,6 +136,18 @@ class Inbox < ApplicationRecord
 
   def tiktok?
     channel_type == 'Channel::Tiktok'
+  end
+
+  def youtube?
+    channel_type == 'Channel::Youtube'
+  end
+
+  def play_store_reviews?
+    channel_type == 'Channel::PlayStoreReviews'
+  end
+
+  def app_store_reviews?
+    channel_type == 'Channel::AppStoreReviews'
   end
 
   def web_widget?
@@ -203,7 +223,41 @@ class Inbox < ApplicationRecord
     account.feature_enabled?('assignment_v2')
   end
 
+  # Banking demo helpers — used by sidebar grouping and CustomFilter (#7, #28)
+  def public_queue?
+    queue_kind == 'public'
+  end
+
+  def mentions_queue?
+    queue_kind == 'mentions'
+  end
+
+  def dm_queue?
+    queue_kind == 'dm' || queue_kind.blank?
+  end
+
   private
+
+  def assign_queue_defaults
+    suffix = name.to_s.split(' - ').last
+    case suffix
+    when 'Mentions'
+      self.queue_kind ||= 'mentions'
+      self.source_type ||= 'mentions'
+    when 'DMs'
+      self.queue_kind ||= 'dm'
+      self.source_type ||= 'dm'
+    when 'Visitor Posts'
+      self.queue_kind ||= 'public'
+      self.source_type ||= 'wall_posts'
+    when 'Public'
+      self.queue_kind ||= 'public'
+      self.source_type ||= 'comments'
+    else
+      self.queue_kind ||= 'dm'
+      self.source_type ||= 'dm'
+    end
+  end
 
   def default_name_for_blank_name
     email? ? display_name_from_email : ''

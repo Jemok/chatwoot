@@ -355,6 +355,25 @@ const isMessageDeleted = computed(() => {
   return props.contentAttributes?.deleted;
 });
 
+// Banking demo: inline moderation for public-comment channels. Backend
+// dispatches to per-channel services (Facebook today; IG/TikTok stubs).
+const MODERATABLE_CHANNELS = [
+  'Channel::FacebookPage',
+  'Channel::Instagram',
+  'Channel::Tiktok',
+];
+// Channels that support profile-level block (wider set than moderation).
+const BLOCKABLE_CHANNELS = [
+  'Channel::FacebookPage',
+  'Channel::Instagram',
+  'Channel::X',
+  'Channel::TwitterProfile',
+  'Channel::Threads',
+  'Channel::Tiktok',
+];
+const channelType = computed(() => inbox.value?.channel_type || '');
+const isModerated = computed(() => !!props.contentAttributes?.moderated);
+
 const payloadForContextMenu = computed(() => {
   return {
     id: props.id,
@@ -379,6 +398,34 @@ const contextMenuEnabledOptions = computed(() => {
       (hasText || hasAttachments) &&
       !isFailedOrProcessing &&
       !isMessageDeleted.value,
+    // Banking demo: edit is limited to outgoing text replies that have been
+    // sent successfully. Backend still gates by MessagePolicy#edit?.
+    edit:
+      isOutgoing && hasText && !isFailedOrProcessing && !isMessageDeleted.value,
+    // Banking demo: expose Facebook/IG/TikTok platform moderation on
+    // incoming public comments. Backend enforces MessagePolicy#moderate?.
+    moderateHide:
+      !isOutgoing &&
+      MODERATABLE_CHANNELS.includes(channelType.value) &&
+      !isFailedOrProcessing &&
+      !isMessageDeleted.value &&
+      !isModerated.value,
+    moderateUnhide:
+      !isOutgoing &&
+      MODERATABLE_CHANNELS.includes(channelType.value) &&
+      isModerated.value &&
+      props.contentAttributes?.moderation?.action !== 'delete',
+    moderateDelete:
+      !isOutgoing &&
+      MODERATABLE_CHANNELS.includes(channelType.value) &&
+      !isMessageDeleted.value,
+    // Banking demo: expose "Block profile on Facebook/X/…" action on
+    // incoming public-comment messages. Backend resolves the platform user
+    // id from the conversation's contact_inbox.
+    blockProfile:
+      !isOutgoing &&
+      BLOCKABLE_CHANNELS.includes(channelType.value) &&
+      !isFailedOrProcessing,
     cannedResponse: isOutgoing && hasText && !isMessageDeleted.value,
     copyLink: !isFailedOrProcessing,
     translate: !isFailedOrProcessing && !isMessageDeleted.value && hasText,
@@ -578,6 +625,7 @@ provideMessageContext({
         :is-open="showContextMenu"
         :enabled-options="contextMenuEnabledOptions"
         :message="payloadForContextMenu"
+        :channel-type="channelType"
         hide-button
         @open="openContextMenu"
         @close="closeContextMenu"

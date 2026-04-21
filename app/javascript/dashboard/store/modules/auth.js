@@ -109,6 +109,16 @@ export const actions = {
       context.commit(types.SET_CURRENT_USER, currentUser);
     } catch (error) {
       if (error?.response?.status === 401) {
+        // Banking demo: when the 401 is a suspension, keep the app mounted so
+        // the SuspendedAccountOverlay (driven by the axios interceptor) can
+        // render instead of redirecting to the login page.
+        const message = error?.response?.data?.error;
+        if (
+          typeof message === 'string' &&
+          /your account is suspended/i.test(message)
+        ) {
+          return;
+        }
         clearCookiesOnLogout();
       }
     }

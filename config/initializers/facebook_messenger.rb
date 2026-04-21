@@ -24,6 +24,33 @@ Rails.application.reloader.to_prepare do
     config.provider = ChatwootFbProvider.new
   end
 
+  # Patch the gem's Server to also handle feed (comment) events.
+  # Meta sends both messaging and feed changes to the same /bot endpoint.
+  # The gem only processes entry[].messaging and skips entry[].changes.
+  # This override extracts feed changes and dispatches them to our job.
+  unless Facebook::Messenger::Server.instance_variable_get(:@feed_patch_applied)
+    Facebook::Messenger::Server.prepend(Module.new do
+      private
+
+      def trigger(events)
+        events['entry']&.each do |entry|
+          page_id = entry['id']
+          (entry['changes'] || []).each do |change|
+            case change['field']
+            when 'feed'
+              Webhooks::FacebookFeedEventsJob.perform_later(page_id, change['value'].to_json)
+            when 'mention'
+              Webhooks::FacebookMentionEventsJob.perform_later(page_id, change['value'].to_json)
+            end
+          end
+        end
+
+        super
+      end
+    end)
+    Facebook::Messenger::Server.instance_variable_set(:@feed_patch_applied, true)
+  end
+
   Facebook::Messenger::Bot.on :message do |message|
     Webhooks::FacebookEventsJob.perform_later(message.to_json)
   end

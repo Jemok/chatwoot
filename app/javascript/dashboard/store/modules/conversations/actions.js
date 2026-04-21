@@ -282,7 +282,9 @@ const actions = {
 
   createPendingMessageAndSend: async ({ dispatch }, data) => {
     const pendingMessage = createPendingMessage(data);
-    dispatch('sendMessageWithData', pendingMessage);
+    // Banking demo: must `return await` so the inner throw (e.g. 403 off-shift)
+    // propagates to ReplyBox's catch which surfaces it as a toast.
+    return dispatch('sendMessageWithData', pendingMessage);
   },
 
   sendMessageWithData: async ({ commit }, pendingMessage) => {
@@ -346,6 +348,31 @@ const actions = {
     } catch (error) {
       throw new Error(error);
     }
+  },
+
+  // Banking demo: edit an outgoing reply. On success we rely on the
+  // `message.updated` ActionCable broadcast to refresh the bubble, but also
+  // optimistically update in case the socket lags.
+  editMessage: async (_ctx, { conversationId, messageId, content }) => {
+    const { data } = await MessageApi.edit(conversationId, messageId, content);
+    return data;
+  },
+
+  // Banking demo: platform moderation (Facebook/IG/TikTok) for offensive
+  // public comments. Calls the existing POST /moderate endpoint; the
+  // backend dispatches to the per-channel service and broadcasts
+  // `message.updated` so the bubble refreshes automatically.
+  moderateMessage: async (
+    _ctx,
+    { conversationId, messageId, actionType, reason }
+  ) => {
+    const { data } = await MessageApi.moderate(
+      conversationId,
+      messageId,
+      actionType,
+      reason
+    );
+    return data;
   },
 
   deleteConversation: async ({ commit, dispatch }, conversationId) => {

@@ -7,7 +7,9 @@ import { useSnakeCase } from 'dashboard/composables/useTransformKeys';
 
 // components
 import ReplyBox from './ReplyBox.vue';
+import ConversationLockBadge from './ConversationLockBadge.vue';
 import MessageList from 'next/message/MessageList.vue';
+import FacebookPostBanner from 'next/message/FacebookPostBanner.vue';
 import ConversationLabelSuggestion from './conversation/LabelSuggestion.vue';
 import Banner from 'dashboard/components/ui/Banner.vue';
 import Spinner from 'dashboard/components-next/spinner/Spinner.vue';
@@ -39,7 +41,9 @@ import { INBOX_TYPES } from 'dashboard/helper/inbox';
 export default {
   components: {
     MessageList,
+    FacebookPostBanner,
     ReplyBox,
+    ConversationLockBadge,
     Banner,
     ConversationLabelSuggestion,
     Spinner,
@@ -457,6 +461,9 @@ export default {
       class="mx-2 mt-2 overflow-hidden rounded-lg"
       :banner-message="$t('CONVERSATION.OLD_INSTAGRAM_INBOX_REPLY_BANNER')"
     />
+    <FacebookPostBanner
+      :additional-attributes="currentChat.additional_attributes"
+    />
     <MessageList
       ref="conversationPanelRef"
       class="conversation-panel flex-shrink flex-grow basis-px flex flex-col overflow-y-auto relative h-full m-0 pb-4"
@@ -520,6 +527,10 @@ export default {
           />
         </div>
       </div>
+      <ConversationLockBadge
+        v-if="currentChat?.id"
+        :conversation-id="currentChat.id"
+      />
       <ReplyBox
         :pop-out-reply-box="isPopOutReplyBox"
         @update:pop-out-reply-box="isPopOutReplyBox = $event"

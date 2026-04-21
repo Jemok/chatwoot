@@ -86,6 +86,24 @@ class MessageApi extends ApiClient {
     return axios.delete(`${this.url}/${conversationID}/messages/${messageId}`);
   }
 
+  // Banking demo: edit an outgoing reply. Backend dispatches to the channel
+  // when native edit is supported, else simulates locally.
+  edit(conversationID, messageId, content) {
+    return axios.post(
+      `${this.url}/${conversationID}/messages/${messageId}/edit`,
+      { content }
+    );
+  }
+
+  // Banking demo: platform moderation for public-comment channels
+  // (Facebook/Instagram/TikTok). Actions: 'hide' | 'unhide' | 'delete'.
+  moderate(conversationID, messageId, actionType, reason) {
+    return axios.post(
+      `${this.url}/${conversationID}/messages/${messageId}/moderate`,
+      { action_type: actionType, reason }
+    );
+  }
+
   retry(conversationID, messageId) {
     return axios.post(
       `${this.url}/${conversationID}/messages/${messageId}/retry`

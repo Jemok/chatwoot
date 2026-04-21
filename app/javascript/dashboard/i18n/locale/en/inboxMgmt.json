@@ -60,6 +60,58 @@
         "NEW_INBOX_SUGGESTION": "This Instagram account was previously linked to a different inbox and has now been migrated here. All new messages will appear here. The old inbox will no longer be able to send or receive messages for this account.",
         "DUPLICATE_INBOX_BANNER": "This Instagram account was migrated to the new Instagram channel inbox. You won’t be able to send/receive Instagram messages from this inbox anymore."
       },
+      "THREADS": {
+        "CONTINUE_WITH_THREADS": "Continue with Threads",
+        "CONNECT_YOUR_THREADS_PROFILE": "Connect your Threads Profile",
+        "HELP": "To add your Threads profile as a channel, you need to authenticate your Threads Profile by clicking on 'Continue with Threads'. Threads replies, mentions, and quotes will land in dedicated inboxes.",
+        "ERROR_MESSAGE": "There was an error connecting to Threads, please try again",
+        "ERROR_AUTH": "There was an error connecting to Threads, please try again"
+      },
+      "X": {
+        "CONTINUE_WITH_X": "Continue with X",
+        "CONNECT_YOUR_X_PROFILE": "Connect your X Profile",
+        "HELP": "To add your X profile as a channel, authenticate via 'Continue with X'. Replies to your tweets land in the main inbox; @mentions and quotes land in a Mentions sub-inbox. If you grant DM access, direct messages land in a DMs sub-inbox.",
+        "ERROR_MESSAGE": "There was an error connecting to X, please try again",
+        "ERROR_AUTH": "There was an error connecting to X, please try again"
+      },
+      "LINKEDIN": {
+        "CONTINUE_WITH_LINKEDIN": "Continue with LinkedIn",
+        "CONNECT_YOUR_LINKEDIN_PROFILE": "Connect your LinkedIn Profile",
+        "HELP": "To add your LinkedIn profile as a channel, authenticate via 'Continue with LinkedIn'. Comments on your posts land in the main inbox; mentions of your profile or page land in a Mentions sub-inbox. Direct messaging requires LinkedIn partner approval.",
+        "ERROR_MESSAGE": "There was an error connecting to LinkedIn, please try again",
+        "ERROR_AUTH": "There was an error connecting to LinkedIn, please try again"
+      },
+      "YOUTUBE": {
+        "CONTINUE_WITH_YOUTUBE": "Continue with YouTube",
+        "CONNECT_YOUR_YOUTUBE_CHANNEL": "Connect your YouTube channel",
+        "HELP": "Authenticate with Google to let Chatwoot read and reply to comments on your YouTube videos. Requires the youtube.force-ssl scope on a Google Cloud project with the YouTube Data API enabled.",
+        "ERROR_MESSAGE": "There was an error connecting to YouTube, please try again",
+        "ERROR_AUTH": "There was an error connecting to YouTube, please try again"
+      },
+      "PLAY_STORE": {
+        "TITLE": "Connect Google Play Store reviews",
+        "HELP": "Upload the JSON service-account key for an account that has the View app information & Reply to reviews permissions in your Play Console, and the package name of the app you want to monitor.",
+        "INBOX_NAME_LABEL": "Inbox name (optional)",
+        "INBOX_NAME_PLACEHOLDER": "e.g. MyApp Reviews",
+        "PACKAGE_NAME_LABEL": "Package name",
+        "CREDENTIALS_LABEL": "Service account JSON",
+        "CREDENTIALS_PLACEHOLDER": "Paste the contents of the service-account JSON, or use the file picker above.",
+        "SUBMIT": "Connect Play Store",
+        "ERROR_MESSAGE": "Could not create the Play Store inbox. Check your package name and credentials."
+      },
+      "APP_STORE": {
+        "TITLE": "Connect App Store reviews",
+        "HELP": "Provide your App Store Connect API credentials (Issuer ID, Key ID, and the .p8 private key) plus the numeric App ID of the app you want to monitor. Reviews will be polled and replies posted via the App Store Connect API.",
+        "INBOX_NAME_LABEL": "Inbox name (optional)",
+        "APP_ID_LABEL": "App ID",
+        "ISSUER_ID_LABEL": "Issuer ID",
+        "KEY_ID_LABEL": "Key ID",
+        "VENDOR_NAME_LABEL": "Vendor name (optional)",
+        "P8_LABEL": "Private key (.p8)",
+        "P8_PLACEHOLDER": "-----BEGIN PRIVATE KEY-----...",
+        "SUBMIT": "Connect App Store",
+        "ERROR_MESSAGE": "Could not create the App Store inbox. Check your credentials."
+      },
       "TIKTOK": {
         "CONTINUE_WITH_TIKTOK": "Continue with TikTok",
         "CONNECT_YOUR_TIKTOK_PROFILE": "Connect your TikTok Profile",
@@ -484,6 +536,30 @@
           "TIKTOK": {
             "TITLE": "TikTok",
             "DESCRIPTION": "Connect your TikTok account"
+          },
+          "THREADS": {
+            "TITLE": "Threads",
+            "DESCRIPTION": "Connect your Threads account"
+          },
+          "X": {
+            "TITLE": "X",
+            "DESCRIPTION": "Connect your X (Twitter) account"
+          },
+          "LINKEDIN": {
+            "TITLE": "LinkedIn",
+            "DESCRIPTION": "Connect your LinkedIn profile or company page"
+          },
+          "YOUTUBE": {
+            "TITLE": "YouTube",
+            "DESCRIPTION": "Reply to comments on your YouTube videos"
+          },
+          "PLAY_STORE": {
+            "TITLE": "Play Store",
+            "DESCRIPTION": "Manage Google Play Store app reviews"
+          },
+          "APP_STORE": {
+            "TITLE": "App Store",
+            "DESCRIPTION": "Manage Apple App Store reviews"
           },
           "VOICE": {
             "TITLE": "Voice",
@@ -1123,6 +1199,12 @@
       "API": "API Channel",
       "INSTAGRAM": "Instagram",
       "TIKTOK": "TikTok",
+      "THREADS": "Threads",
+      "X": "X",
+      "LINKEDIN": "LinkedIn",
+      "YOUTUBE": "YouTube",
+      "PLAY_STORE": "Play Store",
+      "APP_STORE": "App Store",
       "VOICE": "Voice"
     }
   }

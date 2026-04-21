@@ -38,7 +38,16 @@ module Redis::RedisKeys
   ## Sempahores / Locks
   # We don't want to process messages from the same sender concurrently to prevent creating double conversations
   FACEBOOK_MESSAGE_MUTEX = 'FB_MESSAGE_CREATE_LOCK::%<sender_id>s::%<recipient_id>s'.freeze
+  FACEBOOK_FEED_MUTEX = 'FB_FEED_COMMENT_LOCK::%<comment_id>s'.freeze
+  FACEBOOK_MENTION_MUTEX = 'FB_MENTION_LOCK::%<mention_id>s'.freeze
+  INSTAGRAM_COMMENT_MUTEX = 'IG_COMMENT_LOCK::%<comment_id>s'.freeze
+  INSTAGRAM_MENTION_MUTEX = 'IG_MENTION_LOCK::%<mention_id>s'.freeze
   IG_MESSAGE_MUTEX = 'IG_MESSAGE_CREATE_LOCK::%<sender_id>s::%<ig_account_id>s'.freeze
+  THREADS_REPLY_MUTEX = 'THREADS_REPLY_LOCK::%<reply_id>s'.freeze
+  THREADS_MENTION_MUTEX = 'THREADS_MENTION_LOCK::%<mention_id>s'.freeze
+  X_REPLY_MUTEX = 'X_REPLY_LOCK::%<reply_id>s'.freeze
+  X_MENTION_MUTEX = 'X_MENTION_LOCK::%<mention_id>s'.freeze
+  X_DM_MUTEX = 'X_DM_LOCK::%<dm_id>s'.freeze
   TIKTOK_MESSAGE_MUTEX = 'TIKTOK_MESSAGE_CREATE_LOCK::%<business_id>s::%<conversation_id>s'.freeze
   TIKTOK_REFRESH_TOKEN_MUTEX = 'TIKTOK_REFRESH_TOKEN_LOCK::%<channel_id>s'.freeze
   SLACK_MESSAGE_MUTEX = 'SLACK_MESSAGE_LOCK::%<conversation_id>s::%<reference_id>s'.freeze

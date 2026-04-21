@@ -85,6 +85,8 @@ class ConversationFinder
     filter_by_labels
     filter_by_query
     filter_by_source_id
+    filter_by_source_type
+    filter_by_queue_kind
   end
 
   def set_inboxes
@@ -199,6 +201,20 @@ class ConversationFinder
     @conversations.includes(
       :taggings, :inbox, { assignee: { avatar_attachment: [:blob] } }, { contact: { avatar_attachment: [:blob] } }, :team, :contact_inbox
     )
+  end
+
+  # Banking demo (#9): filter by conversations.source_type (dm/comments/wall_posts/mentions)
+  def filter_by_source_type
+    return if params[:source_type].blank?
+
+    @conversations = @conversations.where(source_type: Array(params[:source_type]))
+  end
+
+  # Banking demo (#9): filter by inbox.queue_kind (dm/public/mentions) — joins inboxes table
+  def filter_by_queue_kind
+    return if params[:queue_kind].blank?
+
+    @conversations = @conversations.joins(:inbox).where(inboxes: { queue_kind: Array(params[:queue_kind]) })
   end
 
   def conversations

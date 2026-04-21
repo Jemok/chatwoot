@@ -14,6 +14,21 @@ class AdministratorNotifications::ChannelNotificationsMailer < AdministratorNoti
     send_notification(subject, action_url: inbox_url(inbox))
   end
 
+  def threads_disconnect(inbox)
+    subject = 'Your Threads connection has expired'
+    send_notification(subject, action_url: inbox_url(inbox))
+  end
+
+  def x_disconnect(inbox)
+    subject = 'Your X connection has expired'
+    send_notification(subject, action_url: inbox_url(inbox))
+  end
+
+  def linkedin_disconnect(inbox)
+    subject = 'Your LinkedIn connection has expired'
+    send_notification(subject, action_url: inbox_url(inbox))
+  end
+
   def whatsapp_disconnect(inbox)
     subject = 'Your Whatsapp connection has expired'
     send_notification(subject, action_url: inbox_url(inbox))

@@ -27,6 +27,22 @@ const hasTiktokConfigured = computed(() => {
   return window.chatwootConfig?.tiktokAppId;
 });
 
+const hasThreadsConfigured = computed(() => {
+  return window.chatwootConfig?.threadsAppId;
+});
+
+const hasXConfigured = computed(() => {
+  return window.chatwootConfig?.xAppId;
+});
+
+const hasLinkedinConfigured = computed(() => {
+  return window.chatwootConfig?.linkedinAppId;
+});
+
+const hasYoutubeConfigured = computed(() => {
+  return window.chatwootConfig?.youtubeAppId;
+});
+
 const isActive = computed(() => {
   const { key } = props.channel;
   if (Object.keys(props.enabledFeatures).length === 0) {
@@ -52,6 +68,32 @@ const isActive = computed(() => {
     return props.enabledFeatures.channel_tiktok && hasTiktokConfigured.value;
   }
 
+  if (key === 'threads') {
+    return props.enabledFeatures.channel_threads && hasThreadsConfigured.value;
+  }
+
+  if (key === 'x') {
+    return props.enabledFeatures.channel_x && hasXConfigured.value;
+  }
+
+  if (key === 'linkedin') {
+    return (
+      props.enabledFeatures.channel_linkedin && hasLinkedinConfigured.value
+    );
+  }
+
+  if (key === 'youtube') {
+    return props.enabledFeatures.channel_youtube && hasYoutubeConfigured.value;
+  }
+
+  if (key === 'play_store') {
+    return props.enabledFeatures.channel_play_store_reviews;
+  }
+
+  if (key === 'app_store') {
+    return props.enabledFeatures.channel_app_store_reviews;
+  }
+
   if (key === 'voice') {
     return props.enabledFeatures.channel_voice;
   }
@@ -66,6 +108,12 @@ const isActive = computed(() => {
     'line',
     'instagram',
     'tiktok',
+    'threads',
+    'x',
+    'linkedin',
+    'youtube',
+    'play_store',
+    'app_store',
     'voice',
   ].includes(key);
 });

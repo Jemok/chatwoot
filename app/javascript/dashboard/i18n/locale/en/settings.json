@@ -251,7 +251,8 @@
     "EMAIL_VERIFICATION_SENT": "Verification email has been sent. Please check your inbox.",
     "ACCOUNT_SUSPENDED": {
       "TITLE": "Account Suspended",
-      "MESSAGE": "Your account is suspended. Please reach out to the support team for more information."
+      "MESSAGE": "Your account is suspended. Please reach out to the support team for more information.",
+      "LOGOUT": "Sign out"
     },
     "NO_ACCOUNTS": {
       "TITLE": "No account found",
@@ -336,6 +337,21 @@
     "MACROS": "Macros",
     "TEAMS": "Teams",
     "BILLING": "Billing",
+    "BANKING_DEMO": "Banking Demo",
+    "DEMO_CONTROL_PANEL": "Demo Control Panel",
+    "MODERATION_CENTER": "Moderation Center",
+    "FILTERED_INBOX": "Filtered Inbox",
+    "AUDIT_TRAIL": "Audit Trail",
+    "SECURITY_DASHBOARD": "Security Dashboard",
+    "CHANNEL_PERFORMANCE": "Channel Performance",
+    "NPS_REPORT": "NPS Report",
+    "CSAT_BANKING": "CSAT (Banking)",
+    "ROUTING_MODE": "Routing Mode",
+    "BLOCKED_PROFILES": "Blocked Profiles",
+    "USERS_LIFECYCLE": "Users Lifecycle",
+    "SHIFTS": "Shifts",
+    "DEMO_COVERAGE": "Demo Coverage Map",
+    "ARCHITECTURE_VIEW": "Architecture View",
     "CUSTOM_VIEWS_FOLDER": "Folders",
     "CUSTOM_VIEWS_SEGMENTS": "Segments",
     "ALL_CONTACTS": "All Contacts",

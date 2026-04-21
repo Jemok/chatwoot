@@ -28,10 +28,59 @@ class Channel::Instagram < ApplicationRecord
   validates :instagram_id, uniqueness: true, presence: true
 
   after_create_commit :subscribe
+  after_create_commit :ensure_public_inbox
+  after_create_commit :ensure_mentions_inbox
+  # Re-register webhook subscriptions whenever the token changes
+  # (e.g. OAuth reauthorization) so newly-granted fields like `comments`
+  # get picked up without a manual resubscribe.
+  after_update_commit :subscribe, if: :saved_change_to_access_token?
   before_destroy :unsubscribe
 
   def name
     'Instagram'
+  end
+
+  # Returns the public inbox for feed/comment conversations.
+  # Created automatically when the Instagram channel is set up.
+  def public_inbox
+    account = inbox&.account
+    return unless account
+
+    account.inboxes.find_by(channel: self, name: "#{inbox.name} - Public")
+  end
+
+  def ensure_public_inbox
+    return if public_inbox.present?
+    return unless inbox&.account
+
+    sub_inbox = Inbox.create!(channel: self, account: inbox.account, name: "#{inbox.name} - Public")
+    copy_inbox_members_to(sub_inbox)
+  end
+
+  # Returns the mentions inbox where conversations created from
+  # @mentions (on other users' posts/comments) land.
+  def mentions_inbox
+    account = inbox&.account
+    return unless account
+
+    account.inboxes.find_by(channel: self, name: "#{inbox.name} - Mentions")
+  end
+
+  def ensure_mentions_inbox
+    return if mentions_inbox.present?
+    return unless inbox&.account
+
+    sub_inbox = Inbox.create!(channel: self, account: inbox.account, name: "#{inbox.name} - Mentions")
+    copy_inbox_members_to(sub_inbox)
+  end
+
+  # Mirror the parent inbox's agent assignments onto the auto-created
+  # sub-inbox so the same team sees comments/mentions without manual setup.
+  def copy_inbox_members_to(target_inbox)
+    user_ids = inbox.inbox_members.pluck(:user_id)
+    return if user_ids.blank?
+
+    target_inbox.add_members(user_ids)
   end
 
   def create_contact_inbox(instagram_id, name)
@@ -47,7 +96,7 @@ class Channel::Instagram < ApplicationRecord
     HTTParty.post(
       "https://graph.instagram.com/v22.0/#{instagram_id}/subscribed_apps",
       query: {
-        subscribed_fields: %w[messages message_reactions messaging_seen],
+        subscribed_fields: %w[messages message_reactions messaging_seen comments],
         access_token: access_token
       }
     )

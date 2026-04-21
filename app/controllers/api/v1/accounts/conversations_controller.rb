@@ -112,6 +112,49 @@ class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseContro
     head :ok
   end
 
+  # Banking demo (#6): emit `conversation.viewing_on/off` on the account
+  # pubsub bus so other agents see who has the conversation open. Frontend
+  # debounces the on-event to ≤1/sec/conversation; off is best-effort on
+  # tab close / route change.
+  def toggle_viewing
+    event = params[:status] == 'off' ? Events::Types::CONVERSATION_VIEWING_OFF : Events::Types::CONVERSATION_VIEWING_ON
+    Rails.configuration.dispatcher.dispatch(event, Time.zone.now, conversation: @conversation, user: Current.user)
+    head :ok
+  end
+
+  # Banking demo (Feature 8): supervisor override of an enforced routing
+  # decision. Reassigns the conversation, stamps a new route_reason, and
+  # writes a `routing_override` audit row so reviewers can see who deviated
+  # from the rule and why.
+  def route_override
+    return render json: { error: 'Admin access required' }, status: :forbidden unless Current.account_user&.administrator?
+
+    @conversation.assign_attributes(
+      assignee_id: params[:assignee_id].presence,
+      team_id: params[:team_id].presence
+    )
+    attrs = (@conversation.additional_attributes || {}).merge(
+      'route_reason' => {
+        'override' => true,
+        'overridden_by_user_id' => Current.user.id,
+        'reason' => params[:reason].presence
+      }
+    )
+    @conversation.additional_attributes = attrs
+    @conversation.save!
+
+    PolicyViolationLog.create!(
+      account_id: Current.account.id,
+      user_id: Current.user.id,
+      conversation_id: @conversation.id,
+      inbox_id: @conversation.inbox_id,
+      policy: 'routing_override',
+      action_attempted: 'route_override',
+      details: "Reassigned to user=#{params[:assignee_id]} team=#{params[:team_id]} reason=#{params[:reason]}"
+    )
+    head :ok
+  end
+
   def update_last_seen
     # High-traffic accounts generate excessive DB writes when agents frequently switch between conversations.
     # Throttle last_seen updates to once per hour when there are no unread messages to reduce DB load.

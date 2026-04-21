@@ -20,6 +20,26 @@ const hasTiktokConfigured = computed(() => {
   return window.chatwootConfig?.tiktokAppId;
 });
 
+const hasThreadsConfigured = computed(() => {
+  return window.chatwootConfig?.threadsAppId;
+});
+
+const hasXConfigured = computed(() => {
+  return window.chatwootConfig?.xAppId;
+});
+
+const hasLinkedinConfigured = computed(() => {
+  return window.chatwootConfig?.linkedinAppId;
+});
+
+const hasYoutubeConfigured = computed(() => {
+  return window.chatwootConfig?.youtubeAppId;
+});
+
+const isPlayStoreEnabled = computed(() => true);
+
+const isAppStoreEnabled = computed(() => true);
+
 const channelList = computed(() => {
   const { apiChannelName } = globalConfig.value;
   const channels = [
@@ -85,6 +105,60 @@ const channelList = computed(() => {
       title: t('INBOX_MGMT.ADD.AUTH.CHANNEL.TIKTOK.TITLE'),
       description: t('INBOX_MGMT.ADD.AUTH.CHANNEL.TIKTOK.DESCRIPTION'),
       icon: 'i-woot-tiktok',
+    });
+  }
+
+  if (hasThreadsConfigured.value) {
+    channels.push({
+      key: 'threads',
+      title: t('INBOX_MGMT.ADD.AUTH.CHANNEL.THREADS.TITLE'),
+      description: t('INBOX_MGMT.ADD.AUTH.CHANNEL.THREADS.DESCRIPTION'),
+      icon: 'i-ri-threads-line',
+    });
+  }
+
+  if (hasXConfigured.value) {
+    channels.push({
+      key: 'x',
+      title: t('INBOX_MGMT.ADD.AUTH.CHANNEL.X.TITLE'),
+      description: t('INBOX_MGMT.ADD.AUTH.CHANNEL.X.DESCRIPTION'),
+      icon: 'i-ri-twitter-x-fill',
+    });
+  }
+
+  if (hasLinkedinConfigured.value) {
+    channels.push({
+      key: 'linkedin',
+      title: t('INBOX_MGMT.ADD.AUTH.CHANNEL.LINKEDIN.TITLE'),
+      description: t('INBOX_MGMT.ADD.AUTH.CHANNEL.LINKEDIN.DESCRIPTION'),
+      icon: 'i-ri-linkedin-fill',
+    });
+  }
+
+  if (hasYoutubeConfigured.value) {
+    channels.push({
+      key: 'youtube',
+      title: t('INBOX_MGMT.ADD.AUTH.CHANNEL.YOUTUBE.TITLE'),
+      description: t('INBOX_MGMT.ADD.AUTH.CHANNEL.YOUTUBE.DESCRIPTION'),
+      icon: 'i-ri-youtube-fill',
+    });
+  }
+
+  if (isPlayStoreEnabled.value) {
+    channels.push({
+      key: 'play_store',
+      title: t('INBOX_MGMT.ADD.AUTH.CHANNEL.PLAY_STORE.TITLE'),
+      description: t('INBOX_MGMT.ADD.AUTH.CHANNEL.PLAY_STORE.DESCRIPTION'),
+      icon: 'i-ri-google-play-fill',
+    });
+  }
+
+  if (isAppStoreEnabled.value) {
+    channels.push({
+      key: 'app_store',
+      title: t('INBOX_MGMT.ADD.AUTH.CHANNEL.APP_STORE.TITLE'),
+      description: t('INBOX_MGMT.ADD.AUTH.CHANNEL.APP_STORE.DESCRIPTION'),
+      icon: 'i-ri-app-store-fill',
     });
   }
 

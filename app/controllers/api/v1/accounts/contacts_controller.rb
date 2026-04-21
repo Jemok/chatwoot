@@ -13,7 +13,8 @@ class Api::V1::Accounts::ContactsController < Api::V1::Accounts::BaseController
 
   before_action :check_authorization
   before_action :set_current_page, only: [:index, :active, :search, :filter]
-  before_action :fetch_contact, only: [:show, :update, :destroy, :avatar, :contactable_inboxes, :destroy_custom_attributes]
+  before_action :fetch_contact, only: [:show, :update, :destroy, :avatar, :contactable_inboxes, :destroy_custom_attributes,
+                                       :reveal_account_number, :block, :unblock]
   before_action :set_include_contact_inboxes, only: [:index, :active, :search, :filter, :show, :update]
 
   def index
@@ -114,6 +115,36 @@ class Api::V1::Accounts::ContactsController < Api::V1::Accounts::BaseController
     @contact
   end
 
+  # Banking demo (Phase 2 #8): block/unblock with audit. Pre-existing
+  # `blocked` boolean is reused; this endpoint logs the action.
+  def block
+    @contact.update!(blocked: true)
+    log_block_action('block', params[:reason])
+    render json: { id: @contact.id, blocked: true }
+  end
+
+  def unblock
+    @contact.update!(blocked: false)
+    log_block_action('unblock', params[:reason])
+    render json: { id: @contact.id, blocked: false }
+  end
+
+  # Banking demo (#5): admin-only reveal of full account number. Logged for audit.
+  def reveal_account_number
+    return render json: { error: 'Administrator access required' }, status: :forbidden unless Current.account_user&.administrator?
+
+    full = (@contact.banking_attributes || {})['account_number']
+    PolicyViolationLog.create!(
+      account_id: Current.account.id,
+      user_id: Current.user&.id,
+      policy: 'denied_action',
+      action_attempted: 'reveal_account_number',
+      details: "User #{Current.user&.name} revealed account number for contact ##{@contact.id}",
+      request_ip: request.remote_ip
+    )
+    render json: { account_number: full, masked: Contact.mask_account_number(full.to_s) }
+  end
+
   private
 
   # TODO: Move this to a finder class
@@ -171,7 +202,20 @@ class Api::V1::Accounts::ContactsController < Api::V1::Accounts::BaseController
   end
 
   def permitted_params
-    params.permit(:name, :identifier, :email, :phone_number, :avatar, :blocked, :avatar_url, additional_attributes: {}, custom_attributes: {})
+    params.permit(:name, :identifier, :email, :phone_number, :avatar, :blocked, :avatar_url,
+                  additional_attributes: {}, custom_attributes: {}, banking_attributes: {})
+  end
+
+  # Banking demo (#8): write block/unblock to the security audit feed.
+  def log_block_action(action, reason)
+    PolicyViolationLog.create!(
+      account_id: Current.account.id,
+      user_id: Current.user&.id,
+      policy: 'denied_action',
+      action_attempted: "contacts.#{action}",
+      details: "Contact ##{@contact.id} #{action}ed by #{Current.user&.name}#{reason ? " — reason: #{reason}" : ''}",
+      request_ip: request.remote_ip
+    )
   end
 
   def contact_custom_attributes

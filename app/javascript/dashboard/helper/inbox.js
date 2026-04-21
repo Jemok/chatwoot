@@ -11,6 +11,11 @@ export const INBOX_TYPES = {
   SMS: 'Channel::Sms',
   INSTAGRAM: 'Channel::Instagram',
   TIKTOK: 'Channel::Tiktok',
+  THREADS: 'Channel::Threads',
+  LINKEDIN: 'Channel::Linkedin',
+  YOUTUBE: 'Channel::Youtube',
+  PLAY_STORE_REVIEWS: 'Channel::PlayStoreReviews',
+  APP_STORE_REVIEWS: 'Channel::AppStoreReviews',
   VOICE: 'Channel::Voice',
 };
 
@@ -30,6 +35,10 @@ const INBOX_ICON_MAP_FILL = {
   [INBOX_TYPES.LINE]: 'i-ri-line-fill',
   [INBOX_TYPES.INSTAGRAM]: 'i-ri-instagram-fill',
   [INBOX_TYPES.TIKTOK]: 'i-ri-tiktok-fill',
+  [INBOX_TYPES.LINKEDIN]: 'i-ri-linkedin-fill',
+  [INBOX_TYPES.YOUTUBE]: 'i-ri-youtube-fill',
+  [INBOX_TYPES.PLAY_STORE_REVIEWS]: 'i-ri-google-play-fill',
+  [INBOX_TYPES.APP_STORE_REVIEWS]: 'i-ri-app-store-fill',
   [INBOX_TYPES.VOICE]: 'i-ri-phone-fill',
 };
 
@@ -47,6 +56,8 @@ const INBOX_ICON_MAP_LINE = {
   [INBOX_TYPES.INSTAGRAM]: 'i-woot-instagram',
   [INBOX_TYPES.VOICE]: 'i-woot-voice',
   [INBOX_TYPES.TIKTOK]: 'i-woot-tiktok',
+  [INBOX_TYPES.X]: 'i-woot-x',
+  [INBOX_TYPES.LINKEDIN]: 'i-ri-linkedin-fill',
 };
 
 const DEFAULT_ICON_LINE = 'i-ri-chat-1-line';

@@ -3,6 +3,7 @@ class Webhooks::InstagramController < ActionController::API
 
   def events
     Rails.logger.info('Instagram webhook received events')
+    Rails.logger.info("IG_WEBHOOK_RAW: #{params.to_unsafe_hash.except(:controller, :action).to_json}")
     if params['object'].casecmp('instagram').zero?
       entry_params = params.to_unsafe_hash[:entry]
 

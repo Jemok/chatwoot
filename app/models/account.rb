@@ -100,6 +100,7 @@ class Account < ApplicationRecord
   has_many :articles, dependent: :destroy_async, class_name: '::Article'
   has_many :assignment_policies, dependent: :destroy_async
   has_many :automation_rules, dependent: :destroy_async
+  has_many :blocked_profiles, dependent: :destroy_async
   has_many :macros, dependent: :destroy_async
   has_many :campaigns, dependent: :destroy_async
   has_many :canned_responses, dependent: :destroy_async
@@ -114,7 +115,12 @@ class Account < ApplicationRecord
   has_many :email_channels, dependent: :destroy_async, class_name: '::Channel::Email'
   has_many :facebook_pages, dependent: :destroy_async, class_name: '::Channel::FacebookPage'
   has_many :instagram_channels, dependent: :destroy_async, class_name: '::Channel::Instagram'
-  has_many :tiktok_channels, dependent: :destroy_async, class_name: '::Channel::Tiktok'
+  has_many :linkedin_channels, dependent: :destroy_async, class_name: '::Channel::Linkedin'
+  has_many :youtube_channels, dependent: :destroy_async, class_name: '::Channel::Youtube'
+  has_many :play_store_reviews_channels, dependent: :destroy_async, class_name: '::Channel::PlayStoreReviews'
+  has_many :app_store_reviews_channels, dependent: :destroy_async, class_name: '::Channel::AppStoreReviews'
+  has_many :threads_channels, dependent: :destroy_async, class_name: '::Channel::Threads'
+  has_many :x_channels, dependent: :destroy_async, class_name: '::Channel::X'
   has_many :hooks, dependent: :destroy_async, class_name: 'Integrations::Hook'
   has_many :inboxes, dependent: :destroy_async
   has_many :labels, dependent: :destroy_async

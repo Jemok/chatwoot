@@ -53,6 +53,7 @@ import {
 } from 'dashboard/helper/editorHelper';
 import { useCopilotReply } from 'dashboard/composables/useCopilotReply';
 import { useKbd } from 'dashboard/composables/utils/useKbd';
+import { useConversationLocksStore } from 'dashboard/stores/conversationLocks';
 import { isFileTypeAllowedForChannel } from 'shared/helpers/FileHelper';
 
 import { LOCAL_STORAGE_KEYS } from 'dashboard/constants/localStorage';
@@ -101,6 +102,10 @@ export default {
     const replyEditor = useTemplateRef('replyEditor');
     const copilot = useCopilotReply();
     const shortcutKey = useKbd(['$mod', '+', 'enter']);
+    // Banking demo (#7): single-active-responder lock store. Drives the
+    // isEditorDisabled flag below so the editor turns read-only when another
+    // agent currently holds the lock for this conversation.
+    const conversationLocksStore = useConversationLocksStore();
 
     return {
       uiSettings,
@@ -111,6 +116,7 @@ export default {
       replyEditor,
       copilot,
       shortcutKey,
+      conversationLocksStore,
     };
   },
   data() {
@@ -432,10 +438,21 @@ export default {
     },
     isEditorDisabled() {
       return (
-        (this.isAWhatsAppChannel || this.isAPIInbox) &&
-        !this.isOnPrivateNote &&
-        !this.currentChat.can_reply
+        this.isLockedByOtherAgent ||
+        ((this.isAWhatsAppChannel || this.isAPIInbox) &&
+          !this.isOnPrivateNote &&
+          !this.currentChat.can_reply)
       );
+    },
+    // Banking demo (#7): true when another agent currently holds the
+    // single-active-responder lock for this conversation. Note-mode is
+    // exempt because internal notes don't reach the customer.
+    isLockedByOtherAgent() {
+      if (this.isOnPrivateNote) return false;
+      const displayId = this.currentChat?.id;
+      if (!displayId) return false;
+      const me = this.currentUser?.id;
+      return this.conversationLocksStore.isLockedByOther(displayId, me);
     },
   },
   watch: {

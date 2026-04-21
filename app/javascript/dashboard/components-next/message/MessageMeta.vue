@@ -21,6 +21,7 @@ const {
   isAnEmailChannel,
   isAnInstagramChannel,
   isATiktokChannel,
+  isAThreadsChannel,
 } = useInbox();
 
 const {
@@ -62,7 +63,8 @@ const isSent = computed(() => {
     isASmsInbox.value ||
     isATelegramChannel.value ||
     isAnInstagramChannel.value ||
-    isATiktokChannel.value
+    isATiktokChannel.value ||
+    isAThreadsChannel.value
   ) {
     return sourceId.value && status.value === MESSAGE_STATUS.SENT;
   }
@@ -82,7 +84,8 @@ const isDelivered = computed(() => {
     isASmsInbox.value ||
     isAFacebookInbox.value ||
     isAnInstagramChannel.value ||
-    isATiktokChannel.value
+    isATiktokChannel.value ||
+    isAThreadsChannel.value
   ) {
     return sourceId.value && status.value === MESSAGE_STATUS.DELIVERED;
   }
@@ -105,7 +108,8 @@ const isRead = computed(() => {
     isATwilioChannel.value ||
     isAFacebookInbox.value ||
     isAnInstagramChannel.value ||
-    isATiktokChannel.value
+    isATiktokChannel.value ||
+    isAThreadsChannel.value
   ) {
     return sourceId.value && status.value === MESSAGE_STATUS.READ;
   }
@@ -124,6 +128,32 @@ const statusToShow = computed(() => {
 
   return MESSAGE_STATUS.PROGRESS;
 });
+
+// Banking demo: surface edited-reply indicator. Tooltip shows which channel
+// received the propagated edit (or notes a simulated-only edit).
+const isEdited = computed(
+  () => !!contentAttributes.value?.edited && !contentAttributes.value?.deleted
+);
+const editedTooltip = computed(() => {
+  if (!isEdited.value) return '';
+  return contentAttributes.value?.editSimulated
+    ? 'Edited locally — channel did not support native edit'
+    : 'Edited on the source channel';
+});
+
+// Banking demo: surface "Hidden on Facebook" / "Moderated" badge for
+// platform-moderated public comments (FB/IG/TikTok).
+const moderationInfo = computed(() => contentAttributes.value?.moderation);
+const isHidden = computed(
+  () =>
+    !!contentAttributes.value?.moderated &&
+    moderationInfo.value?.action === 'hide'
+);
+const moderationTooltip = computed(() => {
+  if (!moderationInfo.value) return '';
+  const sim = moderationInfo.value.simulated ? ' (simulated)' : '';
+  return `${moderationInfo.value.action}${sim} · ${moderationInfo.value.at || ''}`;
+});
 </script>
 
 <template>
@@ -131,6 +161,20 @@ const statusToShow = computed(() => {
     <div class="inline">
       <time class="inline">{{ readableTime }}</time>
     </div>
+    <span
+      v-if="isEdited"
+      v-tooltip="editedTooltip"
+      class="italic text-n-slate-11"
+    >
+      {{ $t('CONVERSATION.MESSAGE_EDITED_LABEL') }}
+    </span>
+    <span
+      v-if="isHidden"
+      v-tooltip="moderationTooltip"
+      class="px-1.5 py-0.5 rounded bg-amber-100 text-amber-900 text-[10px] uppercase tracking-wider"
+    >
+      {{ $t('CONVERSATION.MODERATED_HIDDEN_LABEL') }}
+    </span>
     <Icon v-if="isPrivate" icon="i-lucide-lock-keyhole" class="size-3" />
     <MessageStatus v-if="showStatusIndicator" :status="statusToShow" />
   </div>

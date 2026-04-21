@@ -5,6 +5,8 @@ import NetworkNotification from './components/NetworkNotification.vue';
 import UpdateBanner from './components/app/UpdateBanner.vue';
 import PaymentPendingBanner from './components/app/PaymentPendingBanner.vue';
 import PendingEmailVerificationBanner from './components/app/PendingEmailVerificationBanner.vue';
+import SuspendedAccountOverlay from './components/app/SuspendedAccountOverlay.vue';
+import { isAccountSuspended } from './helper/suspensionState';
 import vueActionCable from './helper/actionCable';
 import { useRouter } from 'vue-router';
 import { useStore } from 'dashboard/composables/store';
@@ -30,6 +32,7 @@ export default {
     PaymentPendingBanner,
     WootSnackbarBox,
     PendingEmailVerificationBanner,
+    SuspendedAccountOverlay,
   },
   setup() {
     const router = useRouter();
@@ -45,6 +48,7 @@ export default {
       currentAccountId: accountId,
       currentFontSize,
       uiSettings,
+      isAccountSuspended,
     };
   },
   data() {
@@ -147,7 +151,8 @@ export default {
     <WootSnackbarBox />
     <NetworkNotification />
   </div>
-  <LoadingState v-else />
+  <LoadingState v-else-if="!isAccountSuspended" />
+  <SuspendedAccountOverlay />
 </template>
 
 <style lang="scss">

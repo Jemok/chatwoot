@@ -19,14 +19,32 @@ Rails.application.routes.draw do
     get '/app/accounts/:account_id/settings/inboxes/new/twitter', to: 'dashboard#index', as: 'app_new_twitter_inbox'
     get '/app/accounts/:account_id/settings/inboxes/new/microsoft', to: 'dashboard#index', as: 'app_new_microsoft_inbox'
     get '/app/accounts/:account_id/settings/inboxes/new/instagram', to: 'dashboard#index', as: 'app_new_instagram_inbox'
+    get '/app/accounts/:account_id/settings/inboxes/new/threads', to: 'dashboard#index', as: 'app_new_threads_inbox'
+    get '/app/accounts/:account_id/settings/inboxes/new/x', to: 'dashboard#index', as: 'app_new_x_inbox'
     get '/app/accounts/:account_id/settings/inboxes/new/tiktok', to: 'dashboard#index', as: 'app_new_tiktok_inbox'
+    get '/app/accounts/:account_id/settings/inboxes/new/linkedin', to: 'dashboard#index', as: 'app_new_linkedin_inbox'
+    get '/app/accounts/:account_id/settings/inboxes/new/youtube', to: 'dashboard#index', as: 'app_new_youtube_inbox'
+    get '/app/accounts/:account_id/settings/inboxes/new/play_store', to: 'dashboard#index', as: 'app_new_play_store_inbox'
+    get '/app/accounts/:account_id/settings/inboxes/new/app_store', to: 'dashboard#index', as: 'app_new_app_store_inbox'
     get '/app/accounts/:account_id/settings/inboxes/new/:inbox_id/agents', to: 'dashboard#index', as: 'app_twitter_inbox_agents'
     get '/app/accounts/:account_id/settings/inboxes/new/:inbox_id/agents', to: 'dashboard#index', as: 'app_email_inbox_agents'
     get '/app/accounts/:account_id/settings/inboxes/new/:inbox_id/agents', to: 'dashboard#index', as: 'app_instagram_inbox_agents'
     get '/app/accounts/:account_id/settings/inboxes/new/:inbox_id/agents', to: 'dashboard#index', as: 'app_tiktok_inbox_agents'
+    get '/app/accounts/:account_id/settings/inboxes/new/:inbox_id/agents', to: 'dashboard#index', as: 'app_threads_inbox_agents'
+    get '/app/accounts/:account_id/settings/inboxes/new/:inbox_id/agents', to: 'dashboard#index', as: 'app_x_inbox_agents'
+    get '/app/accounts/:account_id/settings/inboxes/new/:inbox_id/agents', to: 'dashboard#index', as: 'app_linkedin_inbox_agents'
+    get '/app/accounts/:account_id/settings/inboxes/new/:inbox_id/agents', to: 'dashboard#index', as: 'app_youtube_inbox_agents'
+    get '/app/accounts/:account_id/settings/inboxes/new/:inbox_id/agents', to: 'dashboard#index', as: 'app_play_store_inbox_agents'
+    get '/app/accounts/:account_id/settings/inboxes/new/:inbox_id/agents', to: 'dashboard#index', as: 'app_app_store_inbox_agents'
     get '/app/accounts/:account_id/settings/inboxes/:inbox_id', to: 'dashboard#index', as: 'app_instagram_inbox_settings'
     get '/app/accounts/:account_id/settings/inboxes/:inbox_id', to: 'dashboard#index', as: 'app_tiktok_inbox_settings'
     get '/app/accounts/:account_id/settings/inboxes/:inbox_id', to: 'dashboard#index', as: 'app_email_inbox_settings'
+    get '/app/accounts/:account_id/settings/inboxes/:inbox_id', to: 'dashboard#index', as: 'app_threads_inbox_settings'
+    get '/app/accounts/:account_id/settings/inboxes/:inbox_id', to: 'dashboard#index', as: 'app_x_inbox_settings'
+    get '/app/accounts/:account_id/settings/inboxes/:inbox_id', to: 'dashboard#index', as: 'app_linkedin_inbox_settings'
+    get '/app/accounts/:account_id/settings/inboxes/:inbox_id', to: 'dashboard#index', as: 'app_youtube_inbox_settings'
+    get '/app/accounts/:account_id/settings/inboxes/:inbox_id', to: 'dashboard#index', as: 'app_play_store_inbox_settings'
+    get '/app/accounts/:account_id/settings/inboxes/:inbox_id', to: 'dashboard#index', as: 'app_app_store_inbox_settings'
 
     resource :widget, only: [:show]
     namespace :survey do
@@ -51,9 +69,45 @@ Rails.application.routes.draw do
           namespace :actions do
             resource :contact_merge, only: [:create]
           end
+          # Banking demo (Phase 1)
+          namespace :demo do
+            post 'simulate', to: 'control_panel#simulate'
+            get 'overview', to: 'control_panel#overview'
+          end
+          resources :identity_link_suggestions, only: [:index] do
+            member do
+              post :approve
+              post :dismiss
+            end
+          end
+          resources :conversation_locks, only: [], param: :conversation_id do
+            collection do
+              get   ':conversation_id', action: :show
+              post  ':conversation_id', action: :create
+              delete ':conversation_id', action: :destroy
+              post  ':conversation_id/takeover', action: :takeover
+              post  ':conversation_id/heartbeat', action: :heartbeat
+            end
+          end
+          resources :policy_violation_logs, only: [:index]
+          resources :moderated_messages, only: [:index]
+          resources :blocked_profiles, only: [:index, :create, :destroy]
+          resources :public_comments, only: [:index], controller: 'public_comments'
+          resources :channel_performance, only: [:index]
+          resources :nps_responses, only: [:index, :create]
+          resources :shifts, only: [:index, :create, :update, :destroy] do
+            collection do
+              get :on_duty
+              post :bulk_create_recurring
+            end
+          end
           resource :bulk_actions, only: [:create]
           resources :agents, only: [:index, :create, :update, :destroy] do
             post :bulk_create, on: :collection
+            member do
+              post :suspend
+              post :reinstate
+            end
           end
           namespace :captain do
             resource :preferences, only: [:show, :update]
@@ -133,6 +187,8 @@ Rails.application.routes.draw do
                 member do
                   post :translate
                   post :retry
+                  post :moderate
+                  post :edit
                 end
               end
               resources :assignments, only: [:create]
@@ -148,6 +204,8 @@ Rails.application.routes.draw do
               post :toggle_status
               post :toggle_priority
               post :toggle_typing_status
+              post :toggle_viewing
+              post :route_override
               post :update_last_seen
               post :unread
               post :custom_attributes
@@ -183,6 +241,9 @@ Rails.application.routes.draw do
               get :contactable_inboxes
               post :destroy_custom_attributes
               delete :avatar
+              post :reveal_account_number
+              post :block
+              post :unblock
             end
             scope module: :contacts do
               resources :conversations, only: [:index]
@@ -283,6 +344,25 @@ Rails.application.routes.draw do
           namespace :instagram do
             resource :authorization, only: [:create]
           end
+
+          namespace :threads do
+            resource :authorization, only: [:create]
+          end
+
+          namespace :x do
+            resource :authorization, only: [:create]
+          end
+
+          namespace :linkedin do
+            resource :authorization, only: [:create]
+          end
+
+          namespace :youtube do
+            resource :authorization, only: [:create]
+          end
+
+          resource :play_store_channel, only: [:create]
+          resource :app_store_channel, only: [:create]
 
           namespace :tiktok do
             resource :authorization, only: [:create]
@@ -567,6 +647,12 @@ Rails.application.routes.draw do
   post 'webhooks/whatsapp/:phone_number', to: 'webhooks/whatsapp#process_payload'
   get 'webhooks/instagram', to: 'webhooks/instagram#verify'
   post 'webhooks/instagram', to: 'webhooks/instagram#events'
+  get 'webhooks/threads', to: 'webhooks/threads#verify'
+  post 'webhooks/threads', to: 'webhooks/threads#events'
+  get 'webhooks/linkedin', to: 'webhooks/linkedin#verify'
+  post 'webhooks/linkedin', to: 'webhooks/linkedin#events'
+  get 'webhooks/x', to: 'webhooks/x#verify'
+  post 'webhooks/x', to: 'webhooks/x#events'
   post 'webhooks/tiktok', to: 'webhooks/tiktok#events'
   post 'webhooks/shopify', to: 'webhooks/shopify#events'
 
@@ -596,6 +682,10 @@ Rails.application.routes.draw do
   get 'microsoft/callback', to: 'microsoft/callbacks#show'
   get 'google/callback', to: 'google/callbacks#show'
   get 'instagram/callback', to: 'instagram/callbacks#show'
+  get 'threads/callback', to: 'threads/callbacks#show'
+  get 'x/callback', to: 'x/callbacks#show'
+  get 'linkedin/callback', to: 'linkedin/callbacks#show'
+  get 'youtube/callback', to: 'youtube/callbacks#show'
   get 'tiktok/callback', to: 'tiktok/callbacks#show'
   get 'notion/callback', to: 'notion/callbacks#show'
   # ----------------------------------------------------------------------

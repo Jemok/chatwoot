@@ -33,6 +33,29 @@ class Api::V1::Accounts::AgentsController < Api::V1::Accounts::BaseController
     head :ok
   end
 
+  # Banking demo: temporarily disable an agent. Sets suspended_at + flips
+  # availability offline + rotates pubsub_token so existing browser tabs lose
+  # their cable subscription on next reconnect. Audited as user_lifecycle.
+  def suspend
+    authorize_admin!
+    au = @agent.account_users.find_by(account_id: Current.account.id)
+    au.update!(suspended_at: Time.current, suspended_reason: params[:reason].presence)
+    au.update_columns(availability: AccountUser.availabilities[:offline]) unless au.offline?
+    # Nuke active logins: rotate pubsub_token (cable) + clear devise_token_auth
+    # tokens so any open browser tab is signed out on its next API call.
+    @agent.update!(pubsub_token: SecureRandom.uuid, tokens: {})
+    audit_lifecycle('suspend', "reason=#{params[:reason]}")
+    head :ok
+  end
+
+  def reinstate
+    authorize_admin!
+    au = @agent.account_users.find_by(account_id: Current.account.id)
+    au.update!(suspended_at: nil, suspended_reason: nil)
+    audit_lifecycle('reinstate', nil)
+    head :ok
+  end
+
   def bulk_create
     emails = params[:emails]
 
@@ -107,6 +130,23 @@ class Api::V1::Accounts::AgentsController < Api::V1::Accounts::BaseController
 
   def delete_user_record(agent)
     DeleteObjectJob.perform_later(agent) if agent.reload.account_users.blank?
+  end
+
+  def authorize_admin!
+    return if Current.account_user&.administrator?
+
+    render json: { error: 'Administrator access required' }, status: :forbidden
+  end
+
+  def audit_lifecycle(action, details)
+    PolicyViolationLog.create!(
+      account_id: Current.account.id,
+      user_id: Current.user&.id,
+      policy: 'user_lifecycle',
+      action_attempted: action,
+      details: "target_user_id=#{@agent.id} #{details}",
+      request_ip: request.remote_ip
+    )
   end
 end
 

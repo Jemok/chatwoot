@@ -23,5 +23,6 @@ json.id @account.id
 json.locale @account.locale
 json.name @account.name
 json.support_email @account.support_email
+json.enforced_routing_enabled @account.enforced_routing_enabled
 json.status @account.status
 json.cache_keys @account.cache_keys

@@ -3,6 +3,7 @@ import agentBots from './agentBots.json';
 import agentMgmt from './agentMgmt.json';
 import attributesMgmt from './attributesMgmt.json';
 import auditLogs from './auditLogs.json';
+import auditTrail from './auditTrail.json';
 import automation from './automation.json';
 import bulkActions from './bulkActions.json';
 import campaign from './campaign.json';
@@ -47,6 +48,7 @@ export default {
   ...agentMgmt,
   ...attributesMgmt,
   ...auditLogs,
+  ...auditTrail,
   ...automation,
   ...bulkActions,
   ...campaign,

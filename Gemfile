@@ -174,6 +174,9 @@ gem 'lograge', '~> 0.14.0', require: false
 # worked with microsoft refresh token
 gem 'omniauth-oauth2'
 
+# OAuth 1.0a client (X / Twitter Account Activity, DM, tweets via user-context)
+gem 'oauth', '~> 1.1'
+
 gem 'audited', '~> 5.4', '>= 5.4.1'
 
 # need for google auth

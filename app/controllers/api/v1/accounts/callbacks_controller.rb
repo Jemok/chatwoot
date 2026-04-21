@@ -32,11 +32,13 @@ class Api::V1::Accounts::CallbacksController < Api::V1::Accounts::BaseController
   def facebook_pages
     pages = []
     fb_pages = fb_object.get_connections('me', 'accounts')
+    Rails.logger.info "Facebook pages response: #{fb_pages.inspect}"
     pages.concat(fb_pages)
     while fb_pages.respond_to?(:next_page) && (next_page = fb_pages.next_page)
       fb_pages = next_page
       pages.concat(fb_pages)
     end
+    Rails.logger.info "Total Facebook pages found: #{pages.length}"
     @page_details = mark_already_existing_facebook_pages(pages)
   end
 
@@ -95,9 +97,13 @@ class Api::V1::Accounts::CallbacksController < Api::V1::Accounts::BaseController
 
   def long_lived_token(omniauth_token)
     koala = Koala::Facebook::OAuth.new(GlobalConfigService.load('FB_APP_ID', ''), GlobalConfigService.load('FB_APP_SECRET', ''))
-    koala.exchange_access_token_info(omniauth_token)['access_token']
+    result = koala.exchange_access_token_info(omniauth_token)
+    Rails.logger.info "Long-lived token exchange result keys: #{result.keys}"
+    result['access_token']
   rescue StandardError => e
     Rails.logger.error "Error in long_lived_token: #{e.message}"
+    Rails.logger.error e.backtrace.first(5).join("\n")
+    nil
   end
 
   def mark_already_existing_facebook_pages(data)

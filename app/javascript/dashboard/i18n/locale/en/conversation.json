@@ -14,6 +14,24 @@
     "SEARCH_MESSAGES": "Search for messages in conversations",
     "VIEW_ORIGINAL": "View original",
     "VIEW_TRANSLATED": "View translated",
+    "FACEBOOK_FEED": {
+      "ORIGINAL_POST": "Original Post",
+      "SPONSORED_POST": "Sponsored Post",
+      "MENTIONED_IN_POST": "Your Page Was Mentioned",
+      "VISITOR_POST": "Visitor Posted on Your Page",
+      "VIEW_ON_FACEBOOK": "View on Facebook"
+    },
+    "INSTAGRAM_FEED": {
+      "ORIGINAL_POST": "Original Post",
+      "MENTIONED_IN_POST": "Your Account Was Mentioned",
+      "VIEW_ON_INSTAGRAM": "View on Instagram"
+    },
+    "THREADS_FEED": {
+      "ORIGINAL_POST": "Original Thread",
+      "MENTIONED_IN_POST": "Your Account Was Mentioned",
+      "QUOTED_IN_POST": "Your Thread Was Quoted",
+      "VIEW_ON_THREADS": "View on Threads"
+    },
     "EMPTY_STATE": {
       "CMD_BAR": "to open command menu",
       "KEYBOARD_SHORTCUTS": "to view keyboard shortcuts"
@@ -50,6 +68,8 @@
     "UNKNOWN_FILE_TYPE": "Unknown File",
     "SAVE_CONTACT": "Save Contact",
     "NO_CONTENT": "No content to display",
+    "MESSAGE_EDITED_LABEL": "· edited",
+    "MODERATED_HIDDEN_LABEL": "Hidden",
     "SHARED_ATTACHMENT": {
       "CONTACT": "{sender} has shared a contact",
       "LOCATION": "{sender} has shared a location",
@@ -92,6 +112,8 @@
       "OPEN": "More",
       "CLOSE": "Close",
       "DETAILS": "details",
+      "ROUTING_OVERRIDDEN": "Routing overridden",
+      "ROUTED_BY": "Routed by {name}",
       "SNOOZED_UNTIL": "Snoozed until",
       "SNOOZED_UNTIL_TOMORROW": "Snoozed until tomorrow",
       "SNOOZED_UNTIL_NEXT_WEEK": "Snoozed until next week",
@@ -282,6 +304,36 @@
         "MESSAGE": "You cannot undo this action",
         "DELETE": "Delete",
         "CANCEL": "Cancel"
+      },
+      "EDIT": {
+        "MENU_LABEL": "Edit message",
+        "TITLE": "Edit reply",
+        "PLACEHOLDER": "Update your reply…",
+        "HINT": "Supported channels (e.g. Telegram) will receive the edit. Other channels update locally only.",
+        "SAVE": "Save changes",
+        "CANCEL": "Cancel",
+        "SUCCESS": "Message edited on the source channel.",
+        "SUCCESS_SIMULATED": "Edit saved locally — channel does not support native edit.",
+        "FAILED": "Could not edit this message."
+      },
+      "MODERATE": {
+        "HIDE": "Hide on {platform}",
+        "UNHIDE": "Unhide on {platform}",
+        "DELETE": "Delete on {platform}",
+        "REASON_HIDE": "Reason for hiding this comment? (saved to audit trail)",
+        "REASON_UNHIDE": "Reason for un-hiding this comment?",
+        "REASON_DELETE": "Reason for deleting this comment? (saved to audit trail)",
+        "SUCCESS": "Moderation applied on the source platform.",
+        "SUCCESS_SIMULATED": "Moderation recorded locally (platform call skipped).",
+        "FAILED": "Could not moderate this comment."
+      },
+      "BLOCK_PROFILE": {
+        "MENU_LABEL": "Block profile on {platform}",
+        "REASON_PROMPT": "Reason for blocking this {platform} profile? (saved to audit trail)",
+        "DURATION_PROMPT": "Block duration in hours (0 = permanent)",
+        "SUCCESS": "Profile blocked on {platform}.",
+        "SUCCESS_SIMULATED": "Block recorded locally (platform call skipped or unsupported).",
+        "FAILED": "Could not block this profile."
       }
     },
     "SIDEBAR": {

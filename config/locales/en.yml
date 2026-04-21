@@ -228,6 +228,8 @@ en:
       instagram_shared_story_content: 'Shared story'
       instagram_shared_post_content: 'Shared post'
       deleted: This message was deleted
+      hidden_by_moderation: '[Hidden by moderation]'
+      messaging_window_expired: 'Free-form reply blocked — messaging window has expired. Send an approved template to re-engage the customer.'
       whatsapp:
         list_button_label: 'Choose an item'
       delivery_status:

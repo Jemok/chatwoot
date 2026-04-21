@@ -175,8 +175,38 @@ onMounted(() => {
   store.dispatch('customViews/get', 'contact');
 });
 
+// Banking demo (Phase 3 #1): group inboxes by channel + queue_kind so the
+// FB Public, FB Inbox, IG Comments, IG Inbox, X Mentions, X DMs, WhatsApp,
+// TikTok Public, etc. cluster together and are easy to scan during demo.
+const CHANNEL_ORDER = [
+  'Channel::FacebookPage',
+  'Channel::Instagram',
+  'Channel::TwitterProfile',
+  'Channel::Whatsapp',
+  'Channel::TwilioSms',
+  'Channel::Tiktok',
+  'Channel::Threads',
+  'Channel::Linkedin',
+  'Channel::Youtube',
+  'Channel::Email',
+  'Channel::Api',
+  'Channel::WebWidget',
+];
+const QUEUE_ORDER = { dm: 0, public: 1, mentions: 2 };
+const channelRank = ct => {
+  const idx = CHANNEL_ORDER.indexOf(ct);
+  return idx === -1 ? 999 : idx;
+};
 const sortedInboxes = computed(() =>
-  inboxes.value.slice().sort((a, b) => a.name.localeCompare(b.name))
+  inboxes.value.slice().sort((a, b) => {
+    const ca = channelRank(a.channel_type);
+    const cb = channelRank(b.channel_type);
+    if (ca !== cb) return ca - cb;
+    const qa = QUEUE_ORDER[a.queue_kind] ?? 9;
+    const qb = QUEUE_ORDER[b.queue_kind] ?? 9;
+    if (qa !== qb) return qa - qb;
+    return a.name.localeCompare(b.name);
+  })
 );
 
 const closeMobileSidebar = () => {
@@ -720,6 +750,101 @@ const menuItems = computed(() => {
         },
       ],
     },
+    ...(store.getters.getCurrentRole === 'administrator'
+      ? [
+          {
+            name: 'Banking Demo',
+            label: t('SIDEBAR.BANKING_DEMO'),
+            icon: 'i-lucide-landmark',
+            children: [
+              {
+                name: 'Demo Control Panel',
+                label: t('SIDEBAR.DEMO_CONTROL_PANEL'),
+                icon: 'i-lucide-sliders',
+                to: accountScopedRoute('demo_control_panel'),
+              },
+              {
+                name: 'Moderation Center',
+                label: t('SIDEBAR.MODERATION_CENTER'),
+                icon: 'i-lucide-shield-alert',
+                to: accountScopedRoute('moderation_center'),
+              },
+              {
+                name: 'Filtered Inbox',
+                label: t('SIDEBAR.FILTERED_INBOX'),
+                icon: 'i-lucide-filter',
+                to: accountScopedRoute('filtered_inbox'),
+              },
+              {
+                name: 'Audit Trail',
+                label: t('SIDEBAR.AUDIT_TRAIL'),
+                icon: 'i-lucide-scroll-text',
+                to: accountScopedRoute('audit_trail'),
+              },
+              {
+                name: 'Security Dashboard',
+                label: t('SIDEBAR.SECURITY_DASHBOARD'),
+                icon: 'i-lucide-shield-check',
+                to: accountScopedRoute('security_dashboard'),
+              },
+              {
+                name: 'Channel Performance',
+                label: t('SIDEBAR.CHANNEL_PERFORMANCE'),
+                icon: 'i-lucide-activity',
+                to: accountScopedRoute('channel_performance'),
+              },
+              {
+                name: 'NPS Report',
+                label: t('SIDEBAR.NPS_REPORT'),
+                icon: 'i-lucide-gauge',
+                to: accountScopedRoute('nps_report'),
+              },
+              {
+                name: 'CSAT Banking',
+                label: t('SIDEBAR.CSAT_BANKING'),
+                icon: 'i-lucide-smile',
+                to: accountScopedRoute('csat_banking'),
+              },
+              {
+                name: 'Routing Mode',
+                label: t('SIDEBAR.ROUTING_MODE'),
+                icon: 'i-lucide-route',
+                to: accountScopedRoute('routing_mode_admin'),
+              },
+              {
+                name: 'Blocked Profiles',
+                label: t('SIDEBAR.BLOCKED_PROFILES'),
+                icon: 'i-lucide-user-x',
+                to: accountScopedRoute('blocked_profiles_admin'),
+              },
+              {
+                name: 'Users Lifecycle',
+                label: t('SIDEBAR.USERS_LIFECYCLE'),
+                icon: 'i-lucide-calendar-clock',
+                to: accountScopedRoute('users_lifecycle'),
+              },
+              {
+                name: 'Shifts',
+                label: t('SIDEBAR.SHIFTS'),
+                icon: 'i-lucide-clock',
+                to: accountScopedRoute('shifts_admin'),
+              },
+              {
+                name: 'Demo Coverage Map',
+                label: t('SIDEBAR.DEMO_COVERAGE'),
+                icon: 'i-lucide-map',
+                to: accountScopedRoute('demo_coverage_map'),
+              },
+              {
+                name: 'Architecture View',
+                label: t('SIDEBAR.ARCHITECTURE_VIEW'),
+                icon: 'i-lucide-network',
+                to: accountScopedRoute('architecture_view'),
+              },
+            ],
+          },
+        ]
+      : []),
   ];
 });
 </script>

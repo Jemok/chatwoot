@@ -18,4 +18,12 @@ class UserPolicy < ApplicationPolicy
   def bulk_create?
     @account_user.administrator?
   end
+
+  def suspend?
+    @account_user.administrator?
+  end
+
+  def reinstate?
+    @account_user.administrator?
+  end
 end

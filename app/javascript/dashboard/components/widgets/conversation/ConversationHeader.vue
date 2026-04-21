@@ -8,11 +8,13 @@ import InboxName from '../InboxName.vue';
 import MoreActions from './MoreActions.vue';
 import Avatar from 'next/avatar/Avatar.vue';
 import SLACardLabel from './components/SLACardLabel.vue';
+import ConversationViewerStack from './ConversationViewerStack.vue';
 import wootConstants from 'dashboard/constants/globals';
 import { conversationListPageURL } from 'dashboard/helper/URLHelper';
 import { snoozedReopenTime } from 'dashboard/helper/snoozeHelpers';
 import { useInbox } from 'dashboard/composables/useInbox';
 import { useI18n } from 'vue-i18n';
+import { useConversationPresence } from 'dashboard/composables/useConversationPresence';
 
 const props = defineProps({
   chat: {
@@ -34,6 +36,10 @@ const { isAWebWidgetInbox } = useInbox();
 
 const currentChat = computed(() => store.getters.getSelectedChat);
 const accountId = computed(() => store.getters.getCurrentAccountId);
+
+// Banking demo (#6): broadcast viewing presence while this header is mounted.
+const conversationDisplayId = computed(() => currentChat.value?.id);
+useConversationPresence(conversationDisplayId);
 
 const chatMetadata = computed(() => props.chat.meta);
 
@@ -150,6 +156,22 @@ const hasSlaPolicyId = computed(() => props.chat?.sla_policy_id);
         show-extended-info
         :parent-width="width"
         class="hidden md:flex"
+      />
+      <span
+        v-if="routeReason"
+        class="hidden md:inline-flex items-center gap-1 px-2 py-0.5 text-[11px] rounded bg-n-slate-3 text-n-slate-11"
+      >
+        <fluent-icon icon="arrow-routing" size="12" />
+        <template v-if="routeReason.override">{{
+          $t('CONVERSATION.HEADER.ROUTING_OVERRIDDEN')
+        }}</template>
+        <template v-else>{{
+          $t('CONVERSATION.HEADER.ROUTED_BY', { name: routeReason.rule_name })
+        }}</template>
+      </span>
+      <ConversationViewerStack
+        v-if="currentChat?.id"
+        :conversation-id="currentChat.id"
       />
       <MoreActions :conversation-id="currentChat.id" />
     </div>

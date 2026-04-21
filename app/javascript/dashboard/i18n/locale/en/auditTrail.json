@@ -1,0 +1,54 @@
+{
+  "AUDIT_TRAIL": {
+    "HEADER": "Audit Trail",
+    "DESCRIPTION": "Internal view of deleted/hidden messages and security/policy events. All entries are tamper-evident — original content is preserved alongside the replaced view.",
+    "REFRESH": "Refresh",
+    "LOADING": "Loading…",
+    "EXPORT_CSV": "Export CSV",
+    "ERROR": "Failed to load audit data",
+    "FILTERS": {
+      "POLICY": "Policy",
+      "CHANNEL": "Channel",
+      "USER_ID": "User ID",
+      "DATE_FROM": "From",
+      "DATE_TO": "To",
+      "CLEAR": "Clear filters",
+      "PLACEHOLDER_USER": "User ID"
+    },
+    "POLICY": {
+      "WHATSAPP_24H": "WhatsApp 24h",
+      "FACEBOOK_7D": "Facebook 7d",
+      "DENIED_ACTION": "Denied action",
+      "SUSPICIOUS_LOGIN": "Suspicious login",
+      "MODERATION_ACTION": "Moderation action",
+      "USER_LIFECYCLE": "User lifecycle",
+      "PROFILE_BLOCK": "Profile block",
+      "ROUTING_OVERRIDE": "Routing override"
+    },
+    "SECTIONS": {
+      "MODERATED": "Deleted / Moderated Messages",
+      "EVENTS": "Policy / Security Events"
+    },
+    "TABLE": {
+      "WHEN": "When",
+      "POLICY": "Policy",
+      "ACTION": "Action",
+      "CONVERSATION": "Conv",
+      "USER": "User",
+      "IP": "IP",
+      "DETAILS": "Details",
+      "CHANNEL": "Channel",
+      "VIEW": "View"
+    },
+    "EMPTY": {
+      "MODERATED": "No deleted or moderated messages.",
+      "EVENTS": "No policy events match the current filters."
+    },
+    "PAGINATION": {
+      "PREV": "Prev",
+      "NEXT": "Next",
+      "PAGE_OF": "Page {page} of {total}"
+    }
+  }
+}
+

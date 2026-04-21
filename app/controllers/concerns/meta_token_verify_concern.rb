@@ -3,7 +3,13 @@
 
 module MetaTokenVerifyConcern
   def verify
-    service = is_a?(Webhooks::WhatsappController) ? 'whatsapp' : 'instagram'
+    service = if is_a?(Webhooks::WhatsappController)
+                'whatsapp'
+              elsif is_a?(Webhooks::ThreadsController)
+                'threads'
+              else
+                'instagram'
+              end
     if valid_token?(params['hub.verify_token'])
       Rails.logger.info("#{service.capitalize} webhook verified")
       render json: params['hub.challenge']

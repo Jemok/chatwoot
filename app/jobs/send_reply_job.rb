@@ -10,6 +10,12 @@ class SendReplyJob < ApplicationJob
     'Channel::Sms' => ::Sms::SendOnSmsService,
     'Channel::Instagram' => ::Instagram::SendOnInstagramService,
     'Channel::Tiktok' => ::Tiktok::SendOnTiktokService,
+    'Channel::Threads' => ::Threads::SendOnThreadsService,
+    'Channel::X' => ::X::SendOnXService,
+    'Channel::Linkedin' => ::Linkedin::SendOnLinkedinService,
+    'Channel::Youtube' => ::Youtube::SendOnYoutubeService,
+    'Channel::PlayStoreReviews' => ::PlayStore::SendOnPlayStoreService,
+    'Channel::AppStoreReviews' => ::AppStore::SendOnAppStoreService,
     'Channel::Email' => ::Email::SendOnEmailService,
     'Channel::WebWidget' => ::Messages::SendEmailNotificationService,
     'Channel::Api' => ::Messages::SendEmailNotificationService
@@ -30,8 +36,11 @@ class SendReplyJob < ApplicationJob
   private
 
   def send_on_facebook_page(message)
-    if message.conversation.additional_attributes['type'] == 'instagram_direct_message'
+    case message.conversation.additional_attributes['type']
+    when 'instagram_direct_message'
       ::Instagram::Messenger::SendOnInstagramService.new(message: message).perform
+    when 'facebook_feed'
+      ::Facebook::SendOnFacebookFeedService.new(message: message).perform
     else
       ::Facebook::SendOnFacebookService.new(message: message).perform
     end

@@ -12,6 +12,8 @@ import ComposeConversation from 'dashboard/components-next/NewConversation/Compo
 import { BUS_EVENTS } from 'shared/constants/busEvents';
 import NextButton from 'dashboard/components-next/button/Button.vue';
 import VoiceCallButton from 'dashboard/components-next/Contacts/VoiceCallButton.vue';
+import BankingProfileCard from './BankingProfileCard.vue';
+import IdentityLinkSuggestionCard from './IdentityLinkSuggestionCard.vue';
 
 import {
   isAConversationRoute,
@@ -30,6 +32,8 @@ export default {
     SocialIcons,
     ContactMergeModal,
     VoiceCallButton,
+    BankingProfileCard,
+    IdentityLinkSuggestionCard,
   },
   props: {
     contact: {
@@ -326,6 +330,8 @@ export default {
       />
       <ContactMergeModal ref="mergeModal" :primary-contact="contact" />
     </div>
+    <BankingProfileCard :contact="contact" />
+    <IdentityLinkSuggestionCard :contact="contact" />
     <woot-delete-modal
       v-if="showDeleteModal"
       v-model:show="showDeleteModal"

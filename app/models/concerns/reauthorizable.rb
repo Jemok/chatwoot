@@ -77,6 +77,12 @@ module Reauthorizable
       'Channel::FacebookPage' => ->(obj) { obj.send_channel_reauthorization_email(:facebook_disconnect) },
       'Channel::Instagram' => ->(obj) { obj.send_channel_reauthorization_email(:instagram_disconnect) },
       'Channel::Tiktok' => ->(obj) { obj.send_channel_reauthorization_email(:tiktok_disconnect) },
+      'Channel::Threads' => ->(obj) { obj.send_channel_reauthorization_email(:threads_disconnect) },
+      'Channel::X' => ->(obj) { obj.send_channel_reauthorization_email(:x_disconnect) },
+      'Channel::Linkedin' => ->(obj) { obj.send_channel_reauthorization_email(:linkedin_disconnect) },
+      'Channel::Youtube' => ->(_obj) { true },
+      'Channel::PlayStoreReviews' => ->(_obj) { true },
+      'Channel::AppStoreReviews' => ->(_obj) { true },
       'Channel::Whatsapp' => ->(obj) { obj.send_channel_reauthorization_email(:whatsapp_disconnect) },
       'Channel::Email' => ->(obj) { obj.send_channel_reauthorization_email(:email_disconnect) },
       'AutomationRule' => ->(obj) { obj.handle_automation_rule_reauthorization }

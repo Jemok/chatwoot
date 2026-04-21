@@ -64,6 +64,7 @@ class Contact < ApplicationRecord
   has_many :notes, dependent: :destroy_async
   before_validation :prepare_contact_attributes
   after_create_commit :dispatch_create_event, :ip_lookup
+  after_create_commit :suggest_identity_links
   after_update_commit :dispatch_update_event
   after_destroy_commit :dispatch_destroy_event
   before_save :sync_contact_attributes
@@ -201,6 +202,12 @@ class Contact < ApplicationRecord
     ContactIpLookupJob.perform_later(self)
   end
 
+  # Banking demo (#6): scan for cross-channel identity matches on create.
+  # Cheap because uniqueness on phone_number per account already constrains the search.
+  def suggest_identity_links
+    Contacts::IdentityLinkSuggesterService.run_for(self)
+  end
+
   def phone_number_format
     return if phone_number.blank?
 
@@ -251,3 +258,33 @@ class Contact < ApplicationRecord
   end
 end
 Contact.include_mod_with('Concerns::Contact')
+
+# Banking demo (#5): banking_attributes jsonb stores cif, account_number,
+# masked_account_number, branch, segment, kyc_level. Account number is masked
+# in the serializer by default; admin reveals via dedicated endpoint and the
+# reveal is logged via PolicyViolationLog (action_attempted: 'reveal_account_number').
+class Contact
+  BANKING_FIELDS = %w[cif account_number masked_account_number branch segment kyc_level linked_phone].freeze
+
+  def banking
+    (banking_attributes || {}).slice(*BANKING_FIELDS)
+  end
+
+  # Used by the serializer — never returns full account_number; falls back to
+  # generated mask when only the full number is set.
+  def masked_banking
+    data = banking.dup
+    if data['account_number'].present? && data['masked_account_number'].blank?
+      data['masked_account_number'] = Contact.mask_account_number(data['account_number'])
+    end
+    data.delete('account_number')
+    data
+  end
+
+  def self.mask_account_number(number)
+    digits = number.to_s.gsub(/\D/, '')
+    return number.to_s if digits.length < 4
+
+    "#{'*' * (digits.length - 4)}#{digits.last(4)}"
+  end
+end

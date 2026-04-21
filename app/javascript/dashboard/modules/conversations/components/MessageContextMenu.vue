@@ -14,6 +14,8 @@ import {
 import MenuItem from '../../../components/widgets/conversation/contextMenu/menuItem.vue';
 import { useTrack } from 'dashboard/composables';
 import NextButton from 'dashboard/components-next/button/Button.vue';
+import EditMessageModal from './EditMessageModal.vue';
+import BlockedProfilesApi from 'dashboard/api/blockedProfiles';
 
 export default {
   components: {
@@ -21,6 +23,7 @@ export default {
     MenuItem,
     ContextMenu,
     NextButton,
+    EditMessageModal,
   },
   props: {
     message: {
@@ -43,6 +46,12 @@ export default {
       type: Boolean,
       default: false,
     },
+    // Banking demo: channel type of the parent inbox, used to switch on
+    // per-channel moderation labels ("Hide on Facebook" vs generic Hide).
+    channelType: {
+      type: String,
+      default: '',
+    },
   },
   emits: ['open', 'close', 'replyTo'],
   setup() {
@@ -56,6 +65,7 @@ export default {
     return {
       isCannedResponseModalOpen: false,
       showDeleteModal: false,
+      showEditModal: false,
     };
   },
   computed: {
@@ -80,6 +90,15 @@ export default {
       return useSnakeCase(
         this.message.content_attributes ?? this.message.contentAttributes
       );
+    },
+    // Banking demo: pretty label for per-channel moderation menu items.
+    moderationPlatformLabel() {
+      const map = {
+        'Channel::FacebookPage': 'Facebook',
+        'Channel::Instagram': 'Instagram',
+        'Channel::Tiktok': 'TikTok',
+      };
+      return map[this.channelType] || 'platform';
     },
   },
   methods: {
@@ -152,11 +171,88 @@ export default {
     closeDeleteModal() {
       this.showDeleteModal = false;
     },
+    // Banking demo: open/close edit modal for outgoing messages.
+    openEditModal() {
+      this.handleClose();
+      this.showEditModal = true;
+    },
+    closeEditModal() {
+      this.showEditModal = false;
+    },
+    async moderateMessage(actionType) {
+      const reasonKeys = {
+        hide: 'CONVERSATION.CONTEXT_MENU.MODERATE.REASON_HIDE',
+        unhide: 'CONVERSATION.CONTEXT_MENU.MODERATE.REASON_UNHIDE',
+      };
+      const label = this.$t(
+        reasonKeys[actionType] ||
+          'CONVERSATION.CONTEXT_MENU.MODERATE.REASON_DELETE'
+      );
+      const reason = window.prompt(label, '');
+      if (reason === null) return;
+      this.handleClose();
+      try {
+        const res = await this.$store.dispatch('moderateMessage', {
+          conversationId: this.conversationId,
+          messageId: this.messageId,
+          actionType,
+          reason,
+        });
+        const msg = res?.simulated
+          ? this.$t('CONVERSATION.CONTEXT_MENU.MODERATE.SUCCESS_SIMULATED')
+          : this.$t('CONVERSATION.CONTEXT_MENU.MODERATE.SUCCESS');
+        useAlert(msg);
+      } catch (e) {
+        useAlert(
+          e?.response?.data?.error ||
+            this.$t('CONVERSATION.CONTEXT_MENU.MODERATE.FAILED')
+        );
+      }
+    },
+    // Banking demo: block the remote profile from interacting with our
+    // page. Backend resolves channel_type + platform_user_id from the
+    // conversation's contact_inbox and (when not simulated) calls the
+    // platform API (FB Graph `/{page-id}/blocked`). Writes a
+    // `profile_block` audit row either way.
+    async blockProfile() {
+      const reason = window.prompt(
+        this.$t('CONVERSATION.CONTEXT_MENU.BLOCK_PROFILE.REASON_PROMPT', {
+          platform: this.moderationPlatformLabel,
+        }),
+        ''
+      );
+      if (reason === null) return;
+      const durationHours = window.prompt(
+        this.$t('CONVERSATION.CONTEXT_MENU.BLOCK_PROFILE.DURATION_PROMPT'),
+        '0'
+      );
+      if (durationHours === null) return;
+      this.handleClose();
+      try {
+        const { data } = await BlockedProfilesApi.block({
+          conversationId: this.conversationId,
+          reason,
+          durationHours: Number(durationHours) || 0,
+        });
+        const msg = data?.platform?.simulated
+          ? this.$t('CONVERSATION.CONTEXT_MENU.BLOCK_PROFILE.SUCCESS_SIMULATED')
+          : this.$t('CONVERSATION.CONTEXT_MENU.BLOCK_PROFILE.SUCCESS', {
+              platform: this.moderationPlatformLabel,
+            });
+        useAlert(msg);
+      } catch (e) {
+        useAlert(
+          e?.response?.data?.error ||
+            this.$t('CONVERSATION.CONTEXT_MENU.BLOCK_PROFILE.FAILED')
+        );
+      }
+    },
   },
 };
 </script>
 
 <template>
+  <!-- eslint-disable vue/no-bare-strings-in-template -->
   <div class="context-menu">
     <!-- Add To Canned Responses -->
     <woot-modal
@@ -180,6 +276,13 @@ export default {
       :message="$t('CONVERSATION.CONTEXT_MENU.DELETE_CONFIRMATION.MESSAGE')"
       :confirm-text="$t('CONVERSATION.CONTEXT_MENU.DELETE_CONFIRMATION.DELETE')"
       :reject-text="$t('CONVERSATION.CONTEXT_MENU.DELETE_CONFIRMATION.CANCEL')"
+    />
+    <!-- Banking demo: edit outgoing reply modal -->
+    <EditMessageModal
+      v-if="showEditModal && enabledOptions['edit']"
+      :show="showEditModal"
+      :message="message"
+      @close="closeEditModal"
     />
     <NextButton
       v-if="!hideButton"
@@ -243,7 +346,60 @@ export default {
           variant="icon"
           @click.stop="showCannedResponseModal"
         />
-        <hr v-if="enabledOptions['delete']" />
+        <hr v-if="enabledOptions['delete'] || enabledOptions['edit']" />
+        <MenuItem
+          v-if="enabledOptions['edit']"
+          :option="{
+            icon: 'edit',
+            label: $t('CONVERSATION.CONTEXT_MENU.EDIT.MENU_LABEL'),
+          }"
+          variant="icon"
+          @click.stop="openEditModal"
+        />
+        <MenuItem
+          v-if="enabledOptions['moderateHide']"
+          :option="{
+            icon: 'eye-hide',
+            label: $t('CONVERSATION.CONTEXT_MENU.MODERATE.HIDE', {
+              platform: moderationPlatformLabel,
+            }),
+          }"
+          variant="icon"
+          @click.stop="moderateMessage('hide')"
+        />
+        <MenuItem
+          v-if="enabledOptions['moderateUnhide']"
+          :option="{
+            icon: 'eye-show',
+            label: $t('CONVERSATION.CONTEXT_MENU.MODERATE.UNHIDE', {
+              platform: moderationPlatformLabel,
+            }),
+          }"
+          variant="icon"
+          @click.stop="moderateMessage('unhide')"
+        />
+        <MenuItem
+          v-if="enabledOptions['moderateDelete']"
+          :option="{
+            icon: 'delete',
+            label: $t('CONVERSATION.CONTEXT_MENU.MODERATE.DELETE', {
+              platform: moderationPlatformLabel,
+            }),
+          }"
+          variant="icon"
+          @click.stop="moderateMessage('delete')"
+        />
+        <MenuItem
+          v-if="enabledOptions['blockProfile']"
+          :option="{
+            icon: 'dismiss-circle',
+            label: $t('CONVERSATION.CONTEXT_MENU.BLOCK_PROFILE.MENU_LABEL', {
+              platform: moderationPlatformLabel,
+            }),
+          }"
+          variant="icon"
+          @click.stop="blockProfile"
+        />
         <MenuItem
           v-if="enabledOptions['delete']"
           :option="{

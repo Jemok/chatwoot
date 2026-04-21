@@ -24,12 +24,48 @@ class Webhooks::InstagramEventsJob < MutexApplicationJob
   private
 
   def process_single_entry(entry)
+    if comment_event?(entry)
+      dispatch_comment_events(entry)
+      return
+    end
+
+    if mention_event?(entry)
+      dispatch_mention_events(entry)
+      return
+    end
+
     if test_event?(entry)
       process_test_event(entry)
       return
     end
 
     process_messages(entry)
+  end
+
+  def comment_event?(entry)
+    Array(entry[:changes]).any? { |c| c[:field].to_s == 'comments' }
+  end
+
+  def mention_event?(entry)
+    Array(entry[:changes]).any? { |c| c[:field].to_s == 'mentions' }
+  end
+
+  def dispatch_comment_events(entry)
+    ig_account_id = entry[:id]
+    Array(entry[:changes]).each do |change|
+      next unless change[:field].to_s == 'comments'
+
+      ::Webhooks::InstagramCommentEventsJob.perform_later(ig_account_id, change[:value].to_json)
+    end
+  end
+
+  def dispatch_mention_events(entry)
+    ig_account_id = entry[:id]
+    Array(entry[:changes]).each do |change|
+      next unless change[:field].to_s == 'mentions'
+
+      ::Webhooks::InstagramMentionEventsJob.perform_later(ig_account_id, change[:value].to_json)
+    end
   end
 
   def process_messages(entry)

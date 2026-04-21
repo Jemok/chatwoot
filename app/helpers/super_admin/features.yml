@@ -83,6 +83,40 @@ tiktok:
   enabled: true
   icon: 'icon-tiktok'
   config_key: 'tiktok'
+threads:
+  name: 'Threads'
+  description: 'Stay connected with your customers on Threads'
+  enabled: true
+  icon: 'icon-instagram'
+  config_key: 'threads'
+x:
+  name: 'X (Twitter)'
+  description: 'Stay connected with your customers on X (Twitter)'
+  enabled: true
+  icon: 'icon-twitter'
+  config_key: 'x'
+linkedin:
+  name: 'LinkedIn'
+  description: 'Stay connected with your customers on LinkedIn'
+  enabled: true
+  icon: 'icon-linkedin'
+  config_key: 'linkedin'
+youtube:
+  name: 'YouTube'
+  description: 'Reply to comments on your YouTube videos from Chatwoot.'
+  enabled: true
+  icon: 'icon-youtube'
+  config_key: 'youtube'
+play_store_reviews:
+  name: 'Play Store Reviews'
+  description: 'Manage and reply to Google Play Store app reviews from Chatwoot.'
+  enabled: true
+  icon: 'icon-play-store'
+app_store_reviews:
+  name: 'App Store Reviews'
+  description: 'Manage and reply to Apple App Store reviews from Chatwoot.'
+  enabled: true
+  icon: 'icon-app-store'
 whatsapp:
   name: 'WhatsApp'
   description: 'Manage your WhatsApp business interactions from Chatwoot.'

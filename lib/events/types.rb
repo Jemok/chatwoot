@@ -28,6 +28,11 @@ module Events::Types
   TEAM_CHANGED = 'team.changed'
   CONVERSATION_TYPING_ON = 'conversation.typing_on'
   CONVERSATION_TYPING_OFF = 'conversation.typing_off'
+  # Banking demo (#6): per-conversation viewing presence — emitted when an
+  # agent opens / leaves a conversation. Drives the viewer-avatar stack in
+  # the conversation header so multiple agents can see each other live.
+  CONVERSATION_VIEWING_ON = 'conversation.viewing_on'
+  CONVERSATION_VIEWING_OFF = 'conversation.viewing_off'
   CONVERSATION_MENTIONED = 'conversation.mentioned'
 
   # message events

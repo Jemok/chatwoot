@@ -57,6 +57,10 @@ class AccountUser < ApplicationRecord
     administrator? ? ['administrator'] : ['agent']
   end
 
+  def suspended?
+    suspended_at.present?
+  end
+
   def push_event_data
     {
       id: id,

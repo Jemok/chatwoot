@@ -74,3 +74,120 @@ remove_orphan_conversations_job:
   cron: '0 */12 * * *'
   class: 'Internal::RemoveOrphanConversationsJob'
   queue: housekeeping
+
+# executed every 5 minutes
+# polls Graph API for new comments on externally mentioned posts
+# (Facebook does not deliver feed webhooks for comments on external walls)
+facebook_mention_comments_poll_job:
+  cron: '*/5 * * * *'
+  class: 'Webhooks::FacebookMentionCommentsPollJob'
+  queue: scheduled_jobs
+
+# executed every 5 minutes
+# polls Graph API `/tags` edge for posts mentioning our IG business account
+# (Instagram only delivers webhooks for STORY mentions in real time)
+instagram_mentions_poll_job:
+  cron: '*/5 * * * *'
+  class: 'Webhooks::InstagramMentionsPollJob'
+  queue: scheduled_jobs
+
+# executed every 5 minutes
+# polls Graph API `/{threads-user-id}/mentions` for threads mentioning our account
+# (webhook delivery is subject to indexing lag on Threads, same as Instagram)
+threads_mentions_poll_job:
+  cron: '*/5 * * * *'
+  class: 'Webhooks::ThreadsMentionsPollJob'
+  queue: scheduled_jobs
+
+# executed daily at 03:00 UTC
+# refreshes Threads long-lived tokens approaching expiry (within 10 days)
+threads_token_refresh_job:
+  cron: '0 3 * * *'
+  class: 'Webhooks::ThreadsTokenRefreshJob'
+  queue: scheduled_jobs
+
+# executed every 2 minutes
+# polls X API v2 `/2/users/:id/mentions` as a fallback for accounts that
+# don't have Account Activity webhook delivery (or while it is lagging).
+# 2-min cadence stays safely under the X Basic tier limit (10 reqs / 15 min).
+x_mentions_poll_job:
+  cron: '*/2 * * * *'
+  class: 'Webhooks::XMentionsPollJob'
+  queue: scheduled_jobs
+
+# executed every minute
+# polls X API v2 `/2/dm_events` for incoming DMs (OAuth 1.0a fallback when
+# Account Activity API webhook delivery is unavailable).
+x_dm_poll_job:
+  cron: '* * * * *'
+  class: 'Webhooks::XDmPollJob'
+  queue: scheduled_jobs
+
+# executed every 3 minutes
+# polls X API v2 recent search `to:<username>` for tweet replies that target
+# the connected user even when they don't @-mention us in the visible text,
+# plus a batched `conversation_id:(...)` scan over recent open mention threads.
+# 3-min cadence keeps us well under the Basic tier limit (60 reqs / 15 min).
+x_replies_poll_job:
+  cron: '*/3 * * * *'
+  class: 'Webhooks::XRepliesPollJob'
+  queue: scheduled_jobs
+
+# executed every 5 minutes
+# polls LinkedIn REST `/posts` + `/socialActions/{urn}/comments` for new
+# comments on our authored posts (member or org). Webhook-recovery fallback
+# for environments without Community Management API event delivery.
+linkedin_comments_poll_job:
+  cron: '*/5 * * * *'
+  class: 'Webhooks::LinkedinCommentsPollJob'
+  queue: scheduled_jobs
+
+# executed every 5 minutes
+# polls LinkedIn organization notifications for org mentions when
+# `r_organization_admin` is granted; otherwise no-ops.
+linkedin_mentions_poll_job:
+  cron: '*/5 * * * *'
+  class: 'Webhooks::LinkedinMentionsPollJob'
+  queue: scheduled_jobs
+
+# executed daily at 03:00 UTC
+# refreshes LinkedIn 60-day tokens approaching expiry (within 10 days)
+# when the app has the Refresh Tokens product enabled.
+linkedin_token_refresh_job:
+  cron: '0 3 * * *'
+  class: 'Webhooks::LinkedinTokenRefreshJob'
+  queue: scheduled_jobs
+
+# executed every 5 minutes — polls YouTube Data API v3 for new comments on
+# all videos in the connected channel (via commentThreads.list).
+youtube_comments_poll_job:
+  cron: '*/5 * * * *'
+  class: 'Webhooks::YoutubeCommentsPollJob'
+  queue: scheduled_jobs
+
+# executed every 15 minutes — polls Google Play Developer API for new reviews.
+# Play API only surfaces reviews from the last ~7 days; aligns with the 7-day reply window.
+play_store_reviews_poll_job:
+  cron: '*/15 * * * *'
+  class: 'Webhooks::PlayStoreReviewsPollJob'
+  queue: scheduled_jobs
+
+# executed every 15 minutes — polls App Store Connect for customer reviews
+# and any developer responses on the configured app.
+app_store_reviews_poll_job:
+  cron: '*/15 * * * *'
+  class: 'Webhooks::AppStoreReviewsPollJob'
+  queue: scheduled_jobs
+
+# Banking demo: every minute — sweep ended shifts, force-logout agents.
+shifts_schedule_sweep_job:
+  cron: '* * * * *'
+  class: 'Shifts::ScheduleSweepJob'
+  queue: scheduled_jobs
+
+# Banking demo (#7): every minute — purge expired conversation locks.
+conversation_lock_sweep_job:
+  cron: '* * * * *'
+  class: 'Internal::ConversationLockSweepJob'
+  queue: scheduled_jobs
+

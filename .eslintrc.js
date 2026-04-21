@@ -28,6 +28,18 @@ module.exports = {
         'no-console': 'off',
       },
     },
+    {
+      // Internal banking-demo admin pages are not customer-facing and intentionally
+      // skip the i18n + alert restrictions to match the rest of the demo surface.
+      files: ['app/javascript/dashboard/routes/dashboard/demo/**/*.vue'],
+      rules: {
+        'vue/no-bare-strings-in-template': 'off',
+        '@intlify/vue-i18n/no-raw-text': 'off',
+        'no-alert': 'off',
+        'no-restricted-globals': 'off',
+        'vue/prefer-separate-static-class': 'off',
+      },
+    },
   ],
   plugins: ['html', 'prettier'],
   parserOptions: {

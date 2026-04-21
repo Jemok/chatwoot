@@ -11,6 +11,12 @@ import Line from './channels/Line.vue';
 import Telegram from './channels/Telegram.vue';
 import Instagram from './channels/Instagram.vue';
 import Tiktok from './channels/Tiktok.vue';
+import Threads from './channels/Threads.vue';
+import X from './channels/X.vue';
+import Linkedin from './channels/Linkedin.vue';
+import Youtube from './channels/Youtube.vue';
+import PlayStore from './channels/PlayStore.vue';
+import AppStore from './channels/AppStore.vue';
 import Voice from './channels/Voice.vue';
 
 const channelViewList = {
@@ -25,6 +31,12 @@ const channelViewList = {
   telegram: Telegram,
   instagram: Instagram,
   tiktok: Tiktok,
+  threads: Threads,
+  x: X,
+  linkedin: Linkedin,
+  youtube: Youtube,
+  play_store: PlayStore,
+  app_store: AppStore,
   voice: Voice,
 };
 
