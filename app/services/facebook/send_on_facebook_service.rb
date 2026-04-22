@@ -6,6 +6,11 @@ class Facebook::SendOnFacebookService < Base::SendOnChannelService
   end
 
   def perform_reply
+    # Comments / Mentions / Visitor Posts conversations live on companion
+    # inboxes tagged with queue_kind in ('public', 'mentions'). Their outbound
+    # replies must go through the Graph comments endpoint, not Messenger.
+    return perform_feed_reply if feed_inbox?
+
     send_message_to_facebook fb_text_message_params if message.content.present?
 
     if message.attachments.present?
@@ -17,6 +22,37 @@ class Facebook::SendOnFacebookService < Base::SendOnChannelService
     # TODO : handle specific errors or else page will get disconnected
     handle_facebook_error(e)
     Messages::StatusUpdateService.new(message, 'failed', e.message).perform
+  end
+
+  def feed_inbox?
+    inbox.queue_kind.in?(%w[public mentions])
+  end
+
+  # Reply to a FB post/comment via Graph API:
+  #   POST /{parent_id}/comments  { message: "..." }
+  # Parent is the most recent incoming message's comment_id, falling back to
+  # the conversation's post identifier (first reply on a visitor post).
+  def perform_feed_reply
+    parent_id = feed_reply_parent_id
+    if parent_id.blank?
+      Messages::StatusUpdateService.new(message, 'failed', 'Cannot resolve parent post/comment to reply to').perform
+      return
+    end
+
+    graph = Koala::Facebook::API.new(channel.page_access_token)
+    result = graph.put_connections(parent_id, 'comments', message: message.outgoing_content)
+    message.update!(source_id: result['id']) if result.is_a?(Hash) && result['id'].present?
+  rescue Koala::Facebook::APIError => e
+    Rails.logger.error "Facebook::SendOnFacebookService feed reply failed: parent=#{parent_id} #{e.class}: #{e.message}"
+    Messages::StatusUpdateService.new(message, 'failed', e.message).perform
+  end
+
+  def feed_reply_parent_id
+    last_incoming = conversation.messages.incoming.order(created_at: :desc).first
+    last_incoming&.content_attributes&.dig('comment_id') ||
+      last_incoming&.source_id ||
+      conversation.additional_attributes&.dig('post_id') ||
+      conversation.identifier
   end
 
   def send_message_to_facebook(delivery_params)

@@ -188,7 +188,7 @@ class Integrations::Facebook::FeedMessageCreator
       account_id: @inbox.account_id,
       inbox_id: @inbox.id,
       message_type: :incoming,
-      content: message_text,
+      content: message_text.presence || '(no text — media or sticker)',
       source_id: comment_id,
       sender: @contact_inbox.contact,
       content_attributes: comment_content_attributes

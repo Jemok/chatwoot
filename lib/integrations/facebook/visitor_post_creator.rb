@@ -106,11 +106,14 @@ class Integrations::Facebook::VisitorPostCreator
   end
 
   def create_message
+    post_data = @post_data_cache ||= (fetch_post_data || {})
+    content = @change['message'].presence || post_data['message'].presence || post_data['story'].presence || '(no text — media or link)'
+
     @conversation.messages.create!(
       account_id: @inbox.account_id,
       inbox_id: @inbox.id,
       message_type: :incoming,
-      content: @change['message'].presence,
+      content: content,
       source_id: post_id,
       sender: @contact_inbox.contact,
       content_attributes: {
