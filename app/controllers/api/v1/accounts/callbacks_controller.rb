@@ -127,6 +127,12 @@ class Api::V1::Accounts::CallbacksController < Api::V1::Accounts::BaseController
   end
 
   def tag_companion_queue_kinds(facebook_channel)
+    # Channel::FacebookPage's after_create_commit hooks run before the DM
+    # inbox is created, so they early-return. Explicitly invoke them now that
+    # `facebook_channel.inbox` exists, then tag each with queue_kind.
+    facebook_channel.ensure_public_inbox
+    facebook_channel.ensure_mentions_inbox
+    facebook_channel.ensure_visitor_posts_inbox
     facebook_channel.public_inbox&.update!(queue_kind: 'public')
     facebook_channel.visitor_posts_inbox&.update!(queue_kind: 'public')
     facebook_channel.mentions_inbox&.update!(queue_kind: 'mentions')
