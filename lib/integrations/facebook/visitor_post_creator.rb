@@ -106,18 +106,11 @@ class Integrations::Facebook::VisitorPostCreator
   end
 
   def create_message
-    post_data = @post_data_cache ||= (fetch_post_data || {})
-    permalink = post_data['permalink_url'] || "https://www.facebook.com/#{post_id}"
-    content = @change['message'].presence ||
-              post_data['message'].presence ||
-              post_data['story'].presence ||
-              "[Visitor post on FB] #{permalink}"
-
     @conversation.messages.create!(
       account_id: @inbox.account_id,
       inbox_id: @inbox.id,
       message_type: :incoming,
-      content: content,
+      content: @change['message'].presence,
       source_id: post_id,
       sender: @contact_inbox.contact,
       content_attributes: {
