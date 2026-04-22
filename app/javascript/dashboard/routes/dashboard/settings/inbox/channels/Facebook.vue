@@ -167,7 +167,7 @@ export default {
           }
         },
         {
-          scope: 'pages_manage_metadata,pages_messaging,pages_show_list,business_management',
+          scope: 'pages_manage_metadata,pages_messaging,pages_show_list,business_management,pages_manage_engagement,pages_read_engagement,pages_read_user_content',
         }
       );
     },
