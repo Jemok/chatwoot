@@ -97,15 +97,22 @@ class Integrations::Facebook::FeedMessageCreator
   def fetch_comment_text
     comment_data = fetch_comment_data
     @comment_attachment = comment_data&.dig('attachment') if comment_data
+    @comment_permalink = comment_data&.dig('permalink_url') if comment_data
     comment_data&.dig('message')
   end
 
   def fetch_comment_data
     graph = Koala::Facebook::API.new(@channel.page_access_token)
-    graph.get_object(comment_id, fields: 'message,attachment{type,media,url,title}')
+    graph.get_object(comment_id, fields: 'message,permalink_url,attachment{type,media,url,title}')
   rescue StandardError => e
     Rails.logger.warn("Failed to fetch comment data for #{comment_id}: #{e.message}")
     nil
+  end
+
+  def fallback_content
+    return "[Comment on FB] #{@comment_permalink}" if @comment_permalink.present?
+
+    "[Media / sticker comment — open on Facebook]"
   end
 
   def build_contact_inbox
@@ -188,7 +195,7 @@ class Integrations::Facebook::FeedMessageCreator
       account_id: @inbox.account_id,
       inbox_id: @inbox.id,
       message_type: :incoming,
-      content: message_text.presence || '(no text — media or sticker)',
+      content: message_text.presence || fallback_content,
       source_id: comment_id,
       sender: @contact_inbox.contact,
       content_attributes: comment_content_attributes
