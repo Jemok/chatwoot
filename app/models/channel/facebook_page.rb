@@ -41,73 +41,77 @@ class Channel::FacebookPage < ApplicationRecord
     'Facebook'
   end
 
+  # A Facebook Page channel owns multiple inboxes (DM + companion queues for
+  # Public comments, Mentions, Visitor Posts). `has_one :inbox` from
+  # Channelable is not deterministic when there are multiple rows, so we
+  # always resolve the DM inbox by queue_kind. Falls back to the lowest-id
+  # inbox on this channel for pre-migration data that hasn't been tagged.
+  def dm_inbox
+    account = Account.find_by(id: account_id)
+    return unless account
+
+    scope = account.inboxes.where(channel: self)
+    scope.find_by(queue_kind: 'dm') || scope.order(:id).first
+  end
+
+  # Name to use when computing companion inbox names. Always derived from the
+  # DM inbox so the naming is stable regardless of creation order.
+  def base_inbox_name
+    dm_inbox&.name
+  end
+
   # Returns the public inbox for feed/comment conversations.
   # Created automatically when the Facebook page channel is set up.
   def public_inbox
-    account = inbox&.account
-    return unless account
+    base = base_inbox_name
+    return unless base
 
-    account.inboxes.find_by(channel: self, name: "#{inbox.name} - Public")
+    dm_inbox.account.inboxes.find_by(channel: self, name: "#{base} - Public")
   end
 
   def ensure_public_inbox
     return if public_inbox.present?
-    return unless inbox&.account
+    return unless dm_inbox
 
-    account = inbox.account
-    Inbox.create!(
-      channel: self,
-      account: account,
-      name: "#{inbox.name} - Public"
-    )
+    Inbox.create!(channel: self, account: dm_inbox.account, name: "#{base_inbox_name} - Public")
   end
 
   # Returns the mentions inbox where conversations created from
   # @Page mentions (on other users' posts/comments) land.
   def mentions_inbox
-    account = inbox&.account
-    return unless account
+    base = base_inbox_name
+    return unless base
 
-    account.inboxes.find_by(channel: self, name: "#{inbox.name} - Mentions")
+    dm_inbox.account.inboxes.find_by(channel: self, name: "#{base} - Mentions")
   end
 
   def ensure_mentions_inbox
     return if mentions_inbox.present?
-    return unless inbox&.account
+    return unless dm_inbox
 
-    account = inbox.account
-    Inbox.create!(
-      channel: self,
-      account: account,
-      name: "#{inbox.name} - Mentions"
-    )
+    Inbox.create!(channel: self, account: dm_inbox.account, name: "#{base_inbox_name} - Mentions")
   end
 
   # Returns the visitor-posts inbox where conversations are created when
   # a user posts directly on the page's timeline.
   def visitor_posts_inbox
-    account = inbox&.account
-    return unless account
+    base = base_inbox_name
+    return unless base
 
-    account.inboxes.find_by(channel: self, name: "#{inbox.name} - Visitor Posts")
+    dm_inbox.account.inboxes.find_by(channel: self, name: "#{base} - Visitor Posts")
   end
 
   def ensure_visitor_posts_inbox
     return if visitor_posts_inbox.present?
-    return unless inbox&.account
+    return unless dm_inbox
 
-    account = inbox.account
-    Inbox.create!(
-      channel: self,
-      account: account,
-      name: "#{inbox.name} - Visitor Posts"
-    )
+    Inbox.create!(channel: self, account: dm_inbox.account, name: "#{base_inbox_name} - Visitor Posts")
   end
 
   def create_contact_inbox(instagram_id, name)
     @contact_inbox = ::ContactInboxWithContactBuilder.new({
                                                             source_id: instagram_id,
-                                                            inbox: inbox,
+                                                            inbox: dm_inbox,
                                                             contact_attributes: { name: name }
                                                           }).perform
   end
