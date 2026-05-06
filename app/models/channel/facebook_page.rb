@@ -16,106 +16,82 @@
 #  index_channel_facebook_pages_on_page_id                 (page_id)
 #  index_channel_facebook_pages_on_page_id_and_account_id  (page_id,account_id) UNIQUE
 #
-
 class Channel::FacebookPage < ApplicationRecord
   include Channelable
   include Reauthorizable
-
   # TODO: Remove guard once encryption keys become mandatory (target 3-4 releases out).
   if Chatwoot.encryption_configured?
     encrypts :page_access_token
     encrypts :user_access_token
   end
-
   self.table_name = 'channel_facebook_pages'
-
   validates :page_id, uniqueness: { scope: :account_id }
-
   after_create_commit :subscribe
   after_create_commit :ensure_public_inbox
   after_create_commit :ensure_mentions_inbox
   after_create_commit :ensure_visitor_posts_inbox
   before_destroy :unsubscribe
-
   def name
     'Facebook'
   end
-
-  # A Facebook Page channel owns multiple inboxes (DM + companion queues for
-  # Public comments, Mentions, Visitor Posts). `has_one :inbox` from
-  # Channelable is not deterministic when there are multiple rows, so we
-  # always resolve the DM inbox by queue_kind. Falls back to the lowest-id
-  # inbox on this channel for pre-migration data that hasn't been tagged.
-  def dm_inbox
-    account = Account.find_by(id: account_id)
-    return unless account
-
-    scope = account.inboxes.where(channel: self)
-    scope.find_by(queue_kind: 'dm') || scope.order(:id).first
+  # Override the `has_one :inbox` association to deterministically return
+  # the DM inbox when multiple inboxes (Public / Mentions / Visitor Posts)
+  # share the same channel row. Prefers the inbox explicitly tagged with
+  # queue_kind='dm'; falls back to the oldest untagged inbox for legacy rows.
+  def inbox
+    rel = sibling_inboxes
+    rel.find_by(queue_kind: 'dm') || rel.where(queue_kind: nil).order(:id).first || rel.order(:id).first
   end
-
-  # Name to use when computing companion inbox names. Always derived from the
-  # DM inbox so the naming is stable regardless of creation order.
-  def base_inbox_name
-    dm_inbox&.name
-  end
-
+  alias dm_inbox inbox
   # Returns the public inbox for feed/comment conversations.
   # Created automatically when the Facebook page channel is set up.
   def public_inbox
-    base = base_inbox_name
-    return unless base
-
-    dm_inbox.account.inboxes.find_by(channel: self, name: "#{base} - Public")
+    sibling_inboxes.find_by(queue_kind: 'public')
   end
-
   def ensure_public_inbox
     return if public_inbox.present?
     return unless dm_inbox
-
-    Inbox.create!(channel: self, account: dm_inbox.account, name: "#{base_inbox_name} - Public")
+    Inbox.create!(
+      channel: self,
+      account: dm_inbox.account,
+      name: "#{dm_inbox.name}      name: "#{dm_inbox.name}      name    )
   end
-
   # Returns the mentions inbox where conversations created from
   # @Page mentions (on other users' posts/comments) land.
   def mentions_inbox
-    base = base_inbox_name
-    return unless base
-
-    dm_inbox.account.inboxes.find_by(channel: self, name: "#{base} - Mentions")
+    sibling_inboxes.find_by(queue_kind: 'mentions')
   end
-
   def ensure_mentions_inbox
     return if mentions_inbox.present?
     return unless dm_inbox
-
-    Inbox.create!(channel: self, account: dm_inbox.account, name: "#{base_inbox_name} - Mentions")
+    Inbox.create!(
+      channel: self,
+      account: dm_inbox.account,
+      name: "#{dm_inbox.name} - Mentions",
+      queue_kind: 'mentions'
+    )
   end
-
   # Returns the visitor-posts inbox where conversations are created when
   # a user posts directly on the page's timeline.
   def visitor_posts_inbox
-    base = base_inbox_name
-    return unless base
-
-    dm_inbox.account.inboxes.find_by(channel: self, name: "#{base} - Visitor Posts")
+    sibling_inboxes.find_by(queue_kind: 'visitor_posts')
   end
-
   def ensure_visitor_posts_inbox
     return if visitor_posts_inbox.present?
     return unless dm_inbox
-
-    Inbox.create!(channel: self, account: dm_inbox.account, name: "#{base_inbox_name} - Visitor Posts")
+    Inbox.create!(
+      channel: self,
+      account: dm_inbox.account,
+      name: "#{dm_inbox.name} - Visitor Posts",
+      queue_kind: 'visitor_posts'
+    )
   end
-
   def create_contact_inbox(instagram_id, name)
     @contact_inbox = ::ContactInboxWithContactBuilder.new({
                                                             source_id: instagram_id,
                                                             inbox: dm_inbox,
-                                                            contact_attributes: { name: name }
-                                                          }).perform
+                                                            contact_attributes: { name: n                                                                }).perform
   end
-
   def subscribe
     graph = Koala::Facebook::API.new(page_access_token)
     graph.put_connections(page_id, 'subscribed_apps', {
@@ -126,11 +102,13 @@ class Channel::FacebookPage < ApplicationRecord
     Rails.logger.debug { "Rescued: #{e.inspect}" }
     true
   end
-
-  def unsubscribe
-    Facebook::Messenger::Subscriptions.unsubscribe(access_token: page_access_token)
+  def unsubscrib  def unsubscrib  def unsubscbscriptions.unsubscribe(access_token: page_access_token)
   rescue StandardError => e
     Rails.logger.debug { "Rescued: #{e.inspect}" }
     true
+  end
+  private
+  def sibling_inboxes
+    Inbox.where(channel_type: 'Channel::FacebookPage', channel_id: id)
   end
 end

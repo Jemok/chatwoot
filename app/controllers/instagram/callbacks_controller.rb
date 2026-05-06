@@ -136,7 +136,8 @@ class Instagram::CallbacksController < ApplicationController
       account.inboxes.create!(
         account: account,
         channel: channel_instagram,
-        name: user_details['username']
+        name: user_details['username'],
+        queue_kind: 'dm'
       )
 
       channel_instagram

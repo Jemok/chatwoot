@@ -8,7 +8,7 @@ class Instagram::WebhooksBaseService
   private
 
   def inbox_channel(_instagram_id)
-    @inbox = ::Inbox.find_by(channel: @channel)
+    @inbox = @channel.inbox
   end
 
   def find_or_create_contact(user)

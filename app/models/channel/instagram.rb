@@ -40,37 +40,40 @@ class Channel::Instagram < ApplicationRecord
     'Instagram'
   end
 
+  # Override the `has_one :inbox` association to deterministically return
+  # the DM inbox when multiple inboxes (Public / Mentions) share the same
+  # channel row. Prefers the inbox explicitly tagged with queue_kind='dm';
+  # falls back to the oldest untagged row for legacy installs.
+  def inbox
+    rel = Inbox.where(channel_type: 'Channel::Instagram', channel_id: id)
+    rel.find_by(queue_kind: 'dm') || rel.where(queue_kind: nil).order(:id).first || rel.order(:id).first
+  end
+
   # Returns the public inbox for feed/comment conversations.
   # Created automatically when the Instagram channel is set up.
   def public_inbox
-    account = inbox&.account
-    return unless account
-
-    account.inboxes.find_by(channel: self, name: "#{inbox.name} - Public")
+    sibling_inboxes.find_by(queue_kind: 'public')
   end
 
   def ensure_public_inbox
     return if public_inbox.present?
     return unless inbox&.account
 
-    sub_inbox = Inbox.create!(channel: self, account: inbox.account, name: "#{inbox.name} - Public")
+    sub_inbox = Inbox.create!(channel: self, account: inbox.account, name: "#{inbox.name} - Public", queue_kind: 'public')
     copy_inbox_members_to(sub_inbox)
   end
 
   # Returns the mentions inbox where conversations created from
   # @mentions (on other users' posts/comments) land.
   def mentions_inbox
-    account = inbox&.account
-    return unless account
-
-    account.inboxes.find_by(channel: self, name: "#{inbox.name} - Mentions")
+    sibling_inboxes.find_by(queue_kind: 'mentions')
   end
 
   def ensure_mentions_inbox
     return if mentions_inbox.present?
     return unless inbox&.account
 
-    sub_inbox = Inbox.create!(channel: self, account: inbox.account, name: "#{inbox.name} - Mentions")
+    sub_inbox = Inbox.create!(channel: self, account: inbox.account, name: "#{inbox.name} - Mentions", queue_kind: 'mentions')
     copy_inbox_members_to(sub_inbox)
   end
 
@@ -120,5 +123,11 @@ class Channel::Instagram < ApplicationRecord
 
   def access_token
     Instagram::RefreshOauthTokenService.new(channel: self).access_token
+  end
+
+  private
+
+  def sibling_inboxes
+    Inbox.where(channel_type: 'Channel::Instagram', channel_id: id)
   end
 end

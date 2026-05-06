@@ -22,7 +22,7 @@ class Instagram::TestEventService
     # since we don't have any other channel for testing purpose at the time of meta approval
     channel = Channel::Instagram.last
 
-    @inbox = ::Inbox.find_by(channel: channel)
+    @inbox = channel&.inbox
     return unless @inbox
 
     @contact = create_test_contact
