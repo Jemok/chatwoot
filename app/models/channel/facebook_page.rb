@@ -27,9 +27,6 @@ class Channel::FacebookPage < ApplicationRecord
   self.table_name = 'channel_facebook_pages'
   validates :page_id, uniqueness: { scope: :account_id }
   after_create_commit :subscribe
-  after_create_commit :ensure_public_inbox
-  after_create_commit :ensure_mentions_inbox
-  after_create_commit :ensure_visitor_posts_inbox
   before_destroy :unsubscribe
   def name
     'Facebook'

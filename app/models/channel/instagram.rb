@@ -28,8 +28,6 @@ class Channel::Instagram < ApplicationRecord
   validates :instagram_id, uniqueness: true, presence: true
 
   after_create_commit :subscribe
-  after_create_commit :ensure_public_inbox
-  after_create_commit :ensure_mentions_inbox
   # Re-register webhook subscriptions whenever the token changes
   # (e.g. OAuth reauthorization) so newly-granted fields like `comments`
   # get picked up without a manual resubscribe.

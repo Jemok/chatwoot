@@ -22,15 +22,7 @@ RSpec.describe Instagram::CallbacksController do
     allow(ChatwootExceptionTracker).to receive(:new).and_return(exception_tracker)
     allow(exception_tracker).to receive(:capture_exception)
 
-    # Stub the exact request format that's being made
-    stub_request(:post, 'https://graph.instagram.com/v22.0/12345/subscribed_apps?access_token=long_lived_test_token&subscribed_fields%5B%5D=messages&subscribed_fields%5B%5D=message_reactions&subscribed_fields%5B%5D=messaging_seen')
-      .with(
-        headers: {
-          'Accept' => '*/*',
-          'Accept-Encoding' => 'gzip;q=1.0,deflate;q=0.6,identity;q=0.3',
-          'User-Agent' => 'Ruby'
-        }
-      )
+    stub_request(:post, %r{https://graph\.instagram\.com/v22\.0/12345/subscribed_apps.*})
       .to_return(status: 200, body: '', headers: {})
   end
 
@@ -45,12 +37,19 @@ RSpec.describe Instagram::CallbacksController do
           get :show, params: valid_params
         end.to change(Channel::Instagram, :count).by(1).and change(Inbox, :count).by(1)
 
-        expect(Channel::Instagram.last.access_token).to eq('long_lived_test_token')
-        expect(Channel::Instagram.last.instagram_id).to eq('12345')
-        expect(Inbox.last.name).to eq('test_user')
+        channel = Channel::Instagram.last
+        channel_inboxes = account.inboxes.where(channel: channel)
 
-        expect(Inbox.last.channel.reauthorization_required?).to be false
-        expect(response).to redirect_to(app_instagram_inbox_agents_url(account_id: account.id, inbox_id: Inbox.last.id))
+        expect(channel.access_token).to eq('long_lived_test_token')
+        expect(channel.instagram_id).to eq('12345')
+        expect(channel_inboxes.count).to eq(1)
+        expect(channel_inboxes.first.queue_kind).to eq('dm')
+        expect(channel_inboxes.first.name).to eq('test_user')
+        expect(channel_inboxes.where('name LIKE ?', '% - Public')).to be_blank
+        expect(channel_inboxes.where('name LIKE ?', '% - Mentions')).to be_blank
+
+        expect(channel_inboxes.first.channel.reauthorization_required?).to be false
+        expect(response).to redirect_to(app_instagram_inbox_agents_url(account_id: account.id, inbox_id: channel_inboxes.first.id))
       end
 
       it 'updates existing channel with new token' do

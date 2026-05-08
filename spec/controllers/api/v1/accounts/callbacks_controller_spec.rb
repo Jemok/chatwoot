@@ -6,6 +6,7 @@ RSpec.describe 'Callbacks API', type: :request do
     # Mock new and return instance doubles defined above
     allow(Koala::Facebook::OAuth).to receive(:new).and_return(koala_oauth)
     allow(Koala::Facebook::API).to receive(:new).and_return(koala_api)
+    allow(koala_api).to receive(:put_connections).and_return(true)
 
     allow(Facebook::Messenger::Subscriptions).to receive(:subscribe).and_return(true)
     allow(koala_api).to receive(:get_connections).and_return(
@@ -42,6 +43,14 @@ RSpec.describe 'Callbacks API', type: :request do
              as: :json
 
         expect(response).to have_http_status(:success)
+
+        channel = account.facebook_pages.order(:id).last
+        channel_inboxes = account.inboxes.where(channel: channel)
+        expect(channel_inboxes.count).to eq(1)
+        expect(channel_inboxes.first.queue_kind).to eq('dm')
+        expect(channel_inboxes.where('name LIKE ?', '% - Public')).to be_blank
+        expect(channel_inboxes.where('name LIKE ?', '% - Mentions')).to be_blank
+        expect(channel_inboxes.where('name LIKE ?', '% - Visitor Posts')).to be_blank
       end
 
       it 'registers a new facebook page with avatar' do

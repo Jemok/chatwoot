@@ -14,12 +14,6 @@ class Api::V1::Accounts::CallbacksController < Api::V1::Accounts::BaseController
       @facebook_inbox = Current.account.inboxes.create!(name: inbox_name, channel: facebook_channel, queue_kind: 'dm')
       set_instagram_id(page_access_token, facebook_channel)
       set_avatar(@facebook_inbox, page_id)
-      # Channel::FacebookPage after_create callbacks (ensure_public_inbox /
-      # ensure_mentions_inbox / ensure_visitor_posts_inbox) already create the
-      # companion inboxes bound to the same channel so replies flow back
-      # through Graph API. Nothing to do here beyond tagging them with the
-      # queue_kind used by simulators + Moderation Center.
-      tag_companion_queue_kinds(facebook_channel)
     end
   rescue StandardError => e
     ChatwootExceptionTracker.new(e).capture_exception
@@ -124,17 +118,5 @@ class Api::V1::Accounts::CallbacksController < Api::V1::Accounts::BaseController
   def set_avatar(facebook_inbox, page_id)
     avatar_url = "https://graph.facebook.com/#{page_id}/picture?type=large"
     Avatar::AvatarFromUrlJob.perform_later(facebook_inbox, avatar_url)
-  end
-
-  def tag_companion_queue_kinds(facebook_channel)
-    # Channel::FacebookPage's after_create_commit hooks run before the DM
-    # inbox is created, so they early-return. Explicitly invoke them now that
-    # `facebook_channel.inbox` exists, then tag each with queue_kind.
-    facebook_channel.ensure_public_inbox
-    facebook_channel.ensure_mentions_inbox
-    facebook_channel.ensure_visitor_posts_inbox
-    facebook_channel.public_inbox&.update!(queue_kind: 'public')
-    facebook_channel.visitor_posts_inbox&.update!(queue_kind: 'public')
-    facebook_channel.mentions_inbox&.update!(queue_kind: 'mentions')
   end
 end
