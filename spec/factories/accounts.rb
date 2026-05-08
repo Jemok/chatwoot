@@ -1,5 +1,30 @@
 # frozen_string_literal: true
 
+# == Schema Information
+#
+# Table name: accounts
+#
+#  id                       :integer          not null, primary key
+#  auto_resolve_duration    :integer
+#  custom_attributes        :jsonb
+#  domain                   :string(100)
+#  enforced_routing_enabled :boolean          default(FALSE), not null
+#  feature_flags            :bigint           default(0), not null
+#  feature_flags_2          :bigint           default(0), not null
+#  internal_attributes      :jsonb            not null
+#  limits                   :jsonb
+#  locale                   :integer          default("en")
+#  name                     :string           not null
+#  settings                 :jsonb
+#  status                   :integer          default("active")
+#  support_email            :string(100)
+#  created_at               :datetime         not null
+#  updated_at               :datetime         not null
+#
+# Indexes
+#
+#  index_accounts_on_status  (status)
+#
 FactoryBot.define do
   factory :account do
     sequence(:name) { |n| "Account #{n}" }

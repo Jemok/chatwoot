@@ -7,6 +7,7 @@
 #  active      :boolean          default(TRUE), not null
 #  conditions  :jsonb            not null
 #  description :text
+#  enforced    :boolean          default(FALSE), not null
 #  event_name  :string           not null
 #  name        :string           not null
 #  created_at  :datetime         not null

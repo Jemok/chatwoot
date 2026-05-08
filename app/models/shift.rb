@@ -1,3 +1,26 @@
+# == Schema Information
+#
+# Table name: shifts
+#
+#  id                  :bigint           not null, primary key
+#  ends_at             :datetime         not null
+#  recurrence          :string           default("once"), not null
+#  starts_at           :datetime         not null
+#  status              :string           default("scheduled"), not null
+#  timezone            :string
+#  weekday             :integer
+#  created_at          :datetime         not null
+#  updated_at          :datetime         not null
+#  account_id          :bigint           not null
+#  recurrence_group_id :string
+#  user_id             :bigint           not null
+#
+# Indexes
+#
+#  index_shifts_on_account_id_and_user_id_and_starts_at  (account_id,user_id,starts_at)
+#  index_shifts_on_recurrence_group_id                   (recurrence_group_id)
+#  index_shifts_on_status                                (status)
+#
 class Shift < ApplicationRecord
   belongs_to :account
   belongs_to :user

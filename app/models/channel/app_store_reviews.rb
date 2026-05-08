@@ -2,16 +2,20 @@
 #
 # Table name: channel_app_store_reviews
 #
-#  id              :bigint           not null, primary key
-#  app_id          :string           not null
-#  issuer_id       :string           not null
-#  key_id          :string           not null
-#  p8_private_key  :text             not null
-#  vendor_name     :string
-#  last_polled_at  :datetime
-#  account_id      :integer          not null
-#  created_at      :datetime         not null
-#  updated_at      :datetime         not null
+#  id             :bigint           not null, primary key
+#  last_polled_at :datetime
+#  p8_private_key :text             not null
+#  vendor_name    :string
+#  created_at     :datetime         not null
+#  updated_at     :datetime         not null
+#  account_id     :integer          not null
+#  app_id         :string           not null
+#  issuer_id      :string           not null
+#  key_id         :string           not null
+#
+# Indexes
+#
+#  index_channel_app_store_reviews_on_app_id  (app_id) UNIQUE
 #
 class Channel::AppStoreReviews < ApplicationRecord
   include Channelable

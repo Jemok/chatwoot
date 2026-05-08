@@ -4,14 +4,18 @@
 #
 #  id                 :bigint           not null, primary key
 #  access_token       :string           not null
-#  refresh_token      :string
-#  expires_at         :datetime         not null
 #  channel_title      :string
+#  expires_at         :datetime         not null
 #  last_polled_at     :datetime
+#  refresh_token      :string
 #  created_at         :datetime         not null
 #  updated_at         :datetime         not null
 #  account_id         :integer          not null
 #  youtube_channel_id :string           not null
+#
+# Indexes
+#
+#  index_channel_youtube_on_youtube_channel_id  (youtube_channel_id) UNIQUE
 #
 class Channel::Youtube < ApplicationRecord
   include Channelable

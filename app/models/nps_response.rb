@@ -1,3 +1,22 @@
+# == Schema Information
+#
+# Table name: nps_responses
+#
+#  id              :bigint           not null, primary key
+#  comment         :text
+#  score           :integer          not null
+#  created_at      :datetime         not null
+#  updated_at      :datetime         not null
+#  account_id      :bigint           not null
+#  contact_id      :bigint           not null
+#  conversation_id :bigint
+#  inbox_id        :bigint
+#
+# Indexes
+#
+#  index_nps_responses_on_account_id_and_created_at  (account_id,created_at)
+#  index_nps_responses_on_conversation_id            (conversation_id)
+#
 class NpsResponse < ApplicationRecord
   belongs_to :account
   belongs_to :contact

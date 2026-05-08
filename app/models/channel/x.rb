@@ -4,6 +4,19 @@ require 'oauth'
 #
 # Table name: channel_x
 #
+#  id                  :bigint           not null, primary key
+#  access_token        :string           not null
+#  access_token_secret :string           not null
+#  username            :string
+#  created_at          :datetime         not null
+#  updated_at          :datetime         not null
+#  account_id          :integer          not null
+#  x_user_id           :string           not null
+#
+# Indexes
+#
+#  index_channel_x_on_x_user_id  (x_user_id) UNIQUE
+#
 class Channel::X < ApplicationRecord
   include Channelable
   include Reauthorizable

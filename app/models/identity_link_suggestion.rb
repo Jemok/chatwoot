@@ -1,3 +1,24 @@
+# == Schema Information
+#
+# Table name: identity_link_suggestions
+#
+#  id                   :bigint           not null, primary key
+#  decided_at           :datetime
+#  match_key            :string           not null
+#  match_value          :string
+#  status               :integer          default("pending"), not null
+#  created_at           :datetime         not null
+#  updated_at           :datetime         not null
+#  account_id           :bigint           not null
+#  candidate_contact_id :bigint           not null
+#  decided_by_user_id   :bigint
+#  primary_contact_id   :bigint           not null
+#
+# Indexes
+#
+#  idx_identity_link_suggestions_unique           (primary_contact_id,candidate_contact_id,match_key) UNIQUE
+#  index_identity_link_suggestions_on_account_id  (account_id)
+#
 class IdentityLinkSuggestion < ApplicationRecord
   belongs_to :account
   belongs_to :primary_contact, class_name: 'Contact'

@@ -6,6 +6,7 @@
 #
 #  id                    :integer          not null, primary key
 #  additional_attributes :jsonb
+#  banking_attributes    :jsonb            not null
 #  blocked               :boolean          default(FALSE), not null
 #  contact_type          :integer          default("visitor")
 #  country_code          :string           default("")

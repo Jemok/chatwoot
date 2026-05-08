@@ -14,6 +14,7 @@
 #  last_activity_at       :datetime         not null
 #  priority               :integer
 #  snoozed_until          :datetime
+#  source_type            :string
 #  status                 :integer          default("open"), not null
 #  uuid                   :uuid             not null
 #  waiting_since          :datetime
@@ -44,6 +45,7 @@
 #  index_conversations_on_identifier_and_account_id   (identifier,account_id)
 #  index_conversations_on_inbox_id                    (inbox_id)
 #  index_conversations_on_priority                    (priority)
+#  index_conversations_on_source_type                 (source_type)
 #  index_conversations_on_status_and_account_id       (status,account_id)
 #  index_conversations_on_status_and_priority         (status,priority)
 #  index_conversations_on_team_id                     (team_id)

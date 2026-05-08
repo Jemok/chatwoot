@@ -3,6 +3,25 @@
 # - Refreshed on activity (heartbeat)
 # - Released on send / leave / TTL expiry
 # - Supervisor takeover overrides regardless of holder
+# == Schema Information
+#
+# Table name: conversation_locks
+#
+#  id                  :bigint           not null, primary key
+#  expires_at          :datetime         not null
+#  supervisor_takeover :boolean          default(FALSE), not null
+#  created_at          :datetime         not null
+#  updated_at          :datetime         not null
+#  account_id          :bigint           not null
+#  conversation_id     :bigint           not null
+#  user_id             :bigint           not null
+#
+# Indexes
+#
+#  index_conversation_locks_on_conversation_id  (conversation_id) UNIQUE
+#  index_conversation_locks_on_expires_at       (expires_at)
+#  index_conversation_locks_on_user_id          (user_id)
+#
 class ConversationLock < ApplicationRecord
   belongs_to :conversation
   belongs_to :user
