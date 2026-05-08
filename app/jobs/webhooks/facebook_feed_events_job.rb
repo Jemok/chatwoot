@@ -39,6 +39,7 @@ class Webhooks::FacebookFeedEventsJob < MutexApplicationJob
   end
 
   def dispatch_comment_to_inboxes(channel, change)
+    channel.ensure_public_inbox
     if (public_inbox = channel.public_inbox)
       ::Integrations::Facebook::FeedMessageCreator.new(channel, public_inbox, change).perform
     end
@@ -46,6 +47,8 @@ class Webhooks::FacebookFeedEventsJob < MutexApplicationJob
     # Mirror the comment into the visitor-posts / mentions inbox when the
     # parent post already has a conversation there, so agents see replies
     # on the same thread as the original post.
+    channel.ensure_visitor_posts_inbox
+    channel.ensure_mentions_inbox
     [channel.visitor_posts_inbox, channel.mentions_inbox].compact.each do |inbox|
       ::Integrations::Facebook::FeedMessageCreator.new(channel, inbox, change, append_only: true).perform
     end
@@ -58,6 +61,7 @@ class Webhooks::FacebookFeedEventsJob < MutexApplicationJob
     key = format(::Redis::Alfred::FACEBOOK_FEED_MUTEX, comment_id: post_id)
     with_lock(key) do
       Channel::FacebookPage.where(page_id: page_id).each do |channel|
+        channel.ensure_visitor_posts_inbox
         visitor_inbox = channel.visitor_posts_inbox
         next unless visitor_inbox
 

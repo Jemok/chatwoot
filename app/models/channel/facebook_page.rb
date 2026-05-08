@@ -44,19 +44,21 @@ class Channel::FacebookPage < ApplicationRecord
   # Returns the public inbox for feed/comment conversations.
   # Created automatically when the Facebook page channel is set up.
   def public_inbox
-    find_companion_inbox(source_type: 'comments', name_suffix: 'Public')
+    find_companion_inbox(queue_kind: 'public', name_suffix: 'Public')
   end
 
   def ensure_public_inbox
     return if public_inbox.present?
     return unless dm_inbox
 
-    Inbox.create!(
+    sub_inbox = Inbox.create!(
       channel: self,
       account: dm_inbox.account,
       name: "#{dm_inbox.name} - Public",
       queue_kind: 'public'
     )
+
+    copy_inbox_members_to(sub_inbox)
   end
 
   # Returns the mentions inbox where conversations created from
@@ -69,12 +71,14 @@ class Channel::FacebookPage < ApplicationRecord
     return if mentions_inbox.present?
     return unless dm_inbox
 
-    Inbox.create!(
+    sub_inbox = Inbox.create!(
       channel: self,
       account: dm_inbox.account,
       name: "#{dm_inbox.name} - Mentions",
       queue_kind: 'mentions'
     )
+
+    copy_inbox_members_to(sub_inbox)
   end
 
   # Returns the visitor-posts inbox where conversations are created when
@@ -87,12 +91,14 @@ class Channel::FacebookPage < ApplicationRecord
     return if visitor_posts_inbox.present?
     return unless dm_inbox
 
-    Inbox.create!(
+    sub_inbox = Inbox.create!(
       channel: self,
       account: dm_inbox.account,
       name: "#{dm_inbox.name} - Visitor Posts",
       queue_kind: 'public'
     )
+
+    copy_inbox_members_to(sub_inbox)
   end
 
   def create_contact_inbox(instagram_id, name)
@@ -122,6 +128,13 @@ class Channel::FacebookPage < ApplicationRecord
   end
 
   private
+
+  def copy_inbox_members_to(target_inbox)
+    user_ids = dm_inbox.inbox_members.pluck(:user_id)
+    return if user_ids.blank?
+
+    target_inbox.add_members(user_ids)
+  end
 
   def find_companion_inbox(queue_kind: nil, source_type: nil, name_suffix: nil)
     scope = sibling_inboxes

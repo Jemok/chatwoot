@@ -11,6 +11,7 @@ class Webhooks::FacebookMentionEventsJob < MutexApplicationJob
     key = format(::Redis::Alfred::FACEBOOK_MENTION_MUTEX, mention_id: mention_id)
     with_lock(key) do
       Channel::FacebookPage.where(page_id: page_id).each do |channel|
+        channel.ensure_mentions_inbox
         mentions_inbox = channel.mentions_inbox
         next unless mentions_inbox
 
