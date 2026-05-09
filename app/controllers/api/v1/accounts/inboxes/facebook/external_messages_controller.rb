@@ -55,10 +55,16 @@ class Api::V1::Accounts::Inboxes::Facebook::ExternalMessagesController < Api::V1
   end
 
   def resolve_conversation_from_external_user
+    # Only set the contact name when creating a new contact (i.e., no prior contact_inbox
+    # exists for this external user). If a conversation is already in place we must not
+    # overwrite the existing contact's name with whatever the caller supplied.
+    existing_contact_inbox = @inbox.contact_inboxes.find_by(source_id: message_params[:external_user_id])
+    contact_attributes = existing_contact_inbox ? {} : { name: message_params[:external_user_name] }
+
     contact_inbox = ContactInboxWithContactBuilder.new(
       source_id: message_params[:external_user_id],
       inbox: @inbox,
-      contact_attributes: { name: message_params[:external_user_name] }
+      contact_attributes: contact_attributes
     ).perform
 
     @conversation = existing_messenger_conversation(contact_inbox) || create_conversation(contact_inbox)
