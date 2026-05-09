@@ -1,0 +1,39 @@
+<section class="main-content__body">
+  <hr/>
+  <%= form_tag(create_instagram_channel_super_admin_account_path(page.resource), method: :post, html: { class: "form" }) do %>
+    <div class="form-actions">
+      <div class="pb-3">
+        <h3>Add Instagram Channel</h3>
+        <p>Set up an Instagram inbox manually without OAuth login.</p>
+
+        <fieldset class="field-unit mt-6">
+          <legend>Instagram Credentials</legend>
+
+          <div class="field">
+            <%= label_tag :instagram_id, 'Instagram Account ID' %>
+            <%= text_field_tag :instagram_id, '', placeholder: 'e.g., 17841400000000000', required: true %>
+          </div>
+
+          <div class="field">
+            <%= label_tag :access_token, 'Instagram Access Token' %>
+            <%= password_field_tag :access_token, '', placeholder: 'Long-lived Instagram access token', required: true %>
+          </div>
+
+          <div class="field">
+            <%= label_tag :expires_at, 'Token Expires At (Optional)' %>
+            <%= text_field_tag :expires_at, '', placeholder: 'e.g., 2026-07-08 12:00:00 UTC' %>
+            <p>Leave empty to default to 60 days from now.</p>
+          </div>
+
+          <div class="field">
+            <%= label_tag :inbox_name, 'Inbox Name' %>
+            <%= text_field_tag :inbox_name, '', placeholder: 'e.g., My Instagram Inbox', required: true %>
+          </div>
+        </fieldset>
+      </div>
+
+      <%= submit_tag 'Create Instagram Channel' %>
+    </div>
+  <% end %>
+</section>
+

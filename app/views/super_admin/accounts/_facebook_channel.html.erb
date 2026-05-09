@@ -1,0 +1,39 @@
+<section class="main-content__body">
+  <hr/>
+  <%= form_tag(create_facebook_channel_super_admin_account_path(page.resource), method: :post, html: { class: "form" }) do %>
+
+  <div class="form-actions">
+    <div class="pb-3">
+      <h3>Add Facebook Messenger Channel</h3>
+      <p class="text-sm text-gray-600 mt-2">Create a Facebook Messenger channel directly without OAuth login flow.</p>
+
+      <fieldset class="field-unit mt-6">
+        <legend>Facebook Credentials</legend>
+
+        <div class="field">
+          <%= label_tag :page_id, "Page ID" %>
+          <%= text_field_tag :page_id, "", placeholder: "e.g., 123456789012345", required: true %>
+        </div>
+
+        <div class="field">
+          <%= label_tag :page_access_token, "Page Access Token" %>
+          <%= password_field_tag :page_access_token, "", placeholder: "Page access token from Facebook", required: true %>
+        </div>
+
+        <div class="field">
+          <%= label_tag :user_access_token, "User Access Token (Optional)" %>
+          <%= password_field_tag :user_access_token, "", placeholder: "User access token (optional)" %>
+        </div>
+
+        <div class="field">
+          <%= label_tag :inbox_name, "Inbox Name" %>
+          <%= text_field_tag :inbox_name, "", placeholder: "e.g., My Facebook Page", required: true %>
+        </div>
+      </fieldset>
+    </div>
+  <%= submit_tag 'Create Facebook Channel' %>
+  </div>
+  <% end %>
+</section>
+
+

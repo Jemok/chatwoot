@@ -57,6 +57,73 @@ class SuperAdmin::AccountsController < SuperAdmin::ApplicationController
     # rubocop:enable Rails/I18nLocaleTexts
   end
 
+  def create_facebook_channel
+    account = requested_resource
+    page_id = params[:page_id]
+    page_access_token = params[:page_access_token]
+    user_access_token = params[:user_access_token]
+    inbox_name = params[:inbox_name]
+
+    ActiveRecord::Base.transaction do
+      facebook_channel = account.facebook_pages.create!(
+        page_id: page_id,
+        user_access_token: user_access_token,
+        page_access_token: page_access_token
+      )
+      facebook_inbox = account.inboxes.create!(
+        name: inbox_name,
+        channel: facebook_channel,
+        queue_kind: 'dm'
+      )
+      set_instagram_id(page_access_token, facebook_channel)
+      set_avatar(facebook_inbox, page_id)
+    end
+    redirect_back(
+      fallback_location: [namespace, account],
+      notice: "Facebook channel '#{inbox_name}' created successfully"
+    )
+  rescue StandardError => e
+    ChatwootExceptionTracker.new(e).capture_exception
+    Rails.logger.error("Error creating Facebook channel: #{e.message}")
+    redirect_back(
+      fallback_location: [namespace, account],
+      alert: "Error creating Facebook channel: #{e.message}"
+    )
+  end
+
+  def create_instagram_channel
+    account = requested_resource
+    channel_params = instagram_channel_params
+
+    ActiveRecord::Base.transaction do
+      instagram_channel = Channel::Instagram.create!(
+        access_token: channel_params[:access_token],
+        instagram_id: channel_params[:instagram_id],
+        account: account,
+        expires_at: parsed_instagram_expires_at(channel_params[:expires_at])
+      )
+
+      account.inboxes.create!(
+        account: account,
+        channel: instagram_channel,
+        name: channel_params[:inbox_name],
+        queue_kind: 'dm'
+      )
+    end
+
+    redirect_back(
+      fallback_location: [namespace, account],
+      notice: "Instagram channel '#{channel_params[:inbox_name]}' created successfully"
+    )
+  rescue StandardError => e
+    ChatwootExceptionTracker.new(e).capture_exception
+    Rails.logger.error("Error creating Instagram channel: #{e.message}")
+    redirect_back(
+      fallback_location: [namespace, account],
+      alert: "Error creating Instagram channel: #{e.message}"
+    )
+  end
+
   def destroy
     account = Account.find(params[:id])
 
@@ -64,6 +131,36 @@ class SuperAdmin::AccountsController < SuperAdmin::ApplicationController
     # rubocop:disable Rails/I18nLocaleTexts
     redirect_back(fallback_location: [namespace, requested_resource], notice: 'Account deletion is in progress.')
     # rubocop:enable Rails/I18nLocaleTexts
+  end
+
+  private
+
+  def instagram_channel_params
+    params.permit(:instagram_id, :access_token, :inbox_name, :expires_at)
+  end
+
+  def parsed_instagram_expires_at(expires_at)
+    return 60.days.from_now if expires_at.blank?
+
+    Time.zone.parse(expires_at)
+  rescue ArgumentError, TypeError
+    60.days.from_now
+  end
+
+  def set_instagram_id(page_access_token, facebook_channel)
+    fb_object = Koala::Facebook::API.new(page_access_token)
+    response = fb_object.get_connections('me', '', { fields: 'instagram_business_account' })
+    return if response['instagram_business_account'].blank?
+
+    instagram_id = response['instagram_business_account']['id']
+    facebook_channel.update(instagram_id: instagram_id)
+  rescue StandardError => e
+    Rails.logger.error "Error in set_instagram_id: #{e.message}"
+  end
+
+  def set_avatar(facebook_inbox, page_id)
+    avatar_url = "https://graph.facebook.com/#{page_id}/picture?type=large"
+    Avatar::AvatarFromUrlJob.perform_later(facebook_inbox, avatar_url)
   end
 end
 

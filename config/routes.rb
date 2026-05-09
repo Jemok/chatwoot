@@ -276,6 +276,8 @@ Rails.application.routes.draw do
             get :campaigns, on: :member
             get :agent_bot, on: :member
             post :set_agent_bot, on: :member
+            post :ingest_messenger_ai_message, on: :member, to: 'inboxes/facebook/external_messages#create'
+            post :ingest_messenger_ai_message_by_external_user, on: :member, to: 'inboxes/facebook/external_messages#create_by_external_user'
             delete :avatar, on: :member
             post :sync_templates, on: :member
             get :health, on: :member
@@ -712,6 +714,8 @@ Rails.application.routes.draw do
       resources :accounts, only: [:index, :new, :create, :show, :edit, :update, :destroy] do
         post :seed, on: :member
         post :reset_cache, on: :member
+        post :create_facebook_channel, on: :member
+        post :create_instagram_channel, on: :member
       end
       resources :users, only: [:index, :new, :create, :show, :edit, :update, :destroy] do
         delete :avatar, on: :member, action: :destroy_avatar
