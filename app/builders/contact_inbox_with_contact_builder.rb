@@ -20,7 +20,12 @@ class ContactInboxWithContactBuilder
       # rebuild the contact rather than returning a broken record.
       @contact_inbox = nil if @contact_inbox&.contact.nil?
     end
-    return @contact_inbox if @contact_inbox
+
+    if @contact_inbox
+      @contact = @contact_inbox.contact
+      update_contact_name
+      return @contact_inbox
+    end
 
     ActiveRecord::Base.transaction(requires_new: true) do
       build_contact_with_contact_inbox
@@ -33,6 +38,7 @@ class ContactInboxWithContactBuilder
 
   def build_contact_with_contact_inbox
     @contact = find_contact || create_contact
+    update_contact_name
     @contact_inbox = create_contact_inbox
   end
 
@@ -51,6 +57,14 @@ class ContactInboxWithContactBuilder
 
   def update_contact_avatar(contact)
     ::Avatar::AvatarFromUrlJob.perform_later(contact, contact_attributes[:avatar_url]) if contact_attributes[:avatar_url]
+  end
+
+  def update_contact_name
+    incoming_name = contact_attributes[:name]
+    return if incoming_name.blank?
+    return if @contact.name == incoming_name
+
+    @contact.update!(name: incoming_name)
   end
 
   def create_contact
