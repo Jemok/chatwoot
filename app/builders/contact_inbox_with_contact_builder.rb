@@ -14,7 +14,12 @@ class ContactInboxWithContactBuilder
   end
 
   def find_or_create_contact_and_contact_inbox
-    @contact_inbox = inbox.contact_inboxes.find_by(source_id: source_id) if source_id.present?
+    if source_id.present?
+      @contact_inbox = inbox.contact_inboxes.find_by(source_id: source_id)
+      # If the contact was deleted manually the contact_inbox becomes orphaned;
+      # rebuild the contact rather than returning a broken record.
+      @contact_inbox = nil if @contact_inbox&.contact.nil?
+    end
     return @contact_inbox if @contact_inbox
 
     ActiveRecord::Base.transaction(requires_new: true) do

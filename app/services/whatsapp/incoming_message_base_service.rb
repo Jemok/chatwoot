@@ -212,13 +212,13 @@ class Whatsapp::IncomingMessageBaseService
   end
 
   def update_contact_with_profile_name(contact_params)
+    return if @contact.blank?
+
     profile_name = contact_params.dig(:profile, :name)
     return if profile_name.blank?
     return if @contact.name == profile_name
 
-    # Only update if current name exactly matches the phone number or formatted phone number
-    return unless contact_name_matches_phone_number?
-
+    # Update contact name whenever it's different from what's stored in the webhook
     @contact.update!(name: profile_name)
   end
 
