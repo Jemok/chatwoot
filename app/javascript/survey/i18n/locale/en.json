@@ -10,6 +10,13 @@
       "PLACEHOLDER": "Your feedback (optional)",
       "BUTTON_TEXT": "Submit feedback"
     },
+    "NPS": {
+      "LABEL": "How likely are you to recommend us?",
+      "DESCRIPTION": "Choose a score from 0 to 10.",
+      "PLACEHOLDER": "Tell us more about your score (optional)",
+      "BUTTON_TEXT": "Submit NPS",
+      "SUCCESS_MESSAGE": "Thank you for submitting your NPS response."
+    },
     "API": {
       "SUCCESS_MESSAGE": "Survey updated successfully",
       "ERROR_MESSAGE": "Could not connect to Woot Server, Please try again later"

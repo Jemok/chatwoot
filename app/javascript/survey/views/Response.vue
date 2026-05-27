@@ -27,6 +27,9 @@ export default {
       errorMessage: null,
       selectedRating: null,
       feedbackMessage: '',
+      selectedNpsScore: null,
+      npsComment: '',
+      npsResponse: null,
       isUpdating: false,
       logo: '',
       inboxName: '',
@@ -45,8 +48,20 @@ export default {
     isFeedbackSubmitted() {
       return this.surveyDetails && this.surveyDetails.feedback_message;
     },
+    isNpsSubmitted() {
+      return this.npsResponse && this.npsResponse.score !== undefined;
+    },
+    enableNpsForm() {
+      return this.isRatingSubmitted && !this.isNpsSubmitted;
+    },
     isButtonDisabled() {
       return !(this.selectedRating && this.feedback);
+    },
+    isNpsButtonDisabled() {
+      return this.selectedNpsScore === null || this.isUpdating;
+    },
+    npsScores() {
+      return Array.from({ length: 11 }, (_, index) => index);
     },
     isEmojiType() {
       return this.displayType === CSAT_DISPLAY_TYPES.EMOJI;
@@ -92,8 +107,11 @@ export default {
         this.logo = result.data.inbox_avatar_url;
         this.inboxName = result.data.inbox_name;
         this.surveyDetails = result?.data?.csat_survey_response;
+        this.npsResponse = result?.data?.nps_response;
         this.selectedRating = this.surveyDetails?.rating;
         this.feedbackMessage = this.surveyDetails?.feedback_message || '';
+        this.selectedNpsScore = this.npsResponse?.score ?? null;
+        this.npsComment = this.npsResponse?.comment || '';
         this.displayType = result.data.display_type || CSAT_DISPLAY_TYPES.EMOJI;
         this.messageContent =
           result.data.content ||
@@ -119,13 +137,50 @@ export default {
             },
           },
         };
-        await updateSurvey({
+        const response = await updateSurvey({
           uuid: this.surveyId,
           data,
         });
         this.surveyDetails = {
           rating: this.selectedRating,
           feedback_message: this.feedbackMessage,
+        };
+        this.npsResponse = response?.data?.nps_response || this.npsResponse;
+      } catch (error) {
+        const errorMessage = error?.response?.data?.error;
+        this.errorMessage = errorMessage || this.$t('SURVEY.API.ERROR_MESSAGE');
+        useAlert(this.errorMessage);
+      } finally {
+        this.isUpdating = false;
+      }
+    },
+    selectNpsScore(score) {
+      this.selectedNpsScore = score;
+    },
+    async submitNps() {
+      this.isUpdating = true;
+      try {
+        const response = await updateSurvey({
+          uuid: this.surveyId,
+          data: {
+            message: {
+              submitted_values: {
+                csat_survey_response: {
+                  rating: this.selectedRating,
+                  feedback_message: this.feedbackMessage,
+                },
+                nps_response: {
+                  id: this.npsResponse?.id,
+                  score: this.selectedNpsScore,
+                  comment: this.npsComment,
+                },
+              },
+            },
+          },
+        });
+        this.npsResponse = response?.data?.nps_response || {
+          score: this.selectedNpsScore,
+          comment: this.npsComment,
         };
       } catch (error) {
         const errorMessage = error?.response?.data?.error;
@@ -195,6 +250,46 @@ export default {
           :selected-rating="selectedRating"
           @send-feedback="sendFeedback"
         />
+        <div v-if="enableNpsForm" class="mt-8">
+          <label class="mb-3 block text-base font-medium text-n-slate-12">
+            {{ $t('SURVEY.NPS.LABEL') }}
+          </label>
+          <p class="mb-4 text-sm text-n-slate-11">
+            {{ $t('SURVEY.NPS.DESCRIPTION') }}
+          </p>
+          <div class="mb-5 grid grid-cols-5 gap-2 sm:grid-cols-10">
+            <button
+              v-for="score in npsScores"
+              :key="score"
+              type="button"
+              class="rounded-lg border px-3 py-2 text-sm font-semibold transition-colors"
+              :class="[
+                selectedNpsScore === score
+                  ? 'border-n-brand bg-n-brand text-white'
+                  : 'border-n-weak bg-n-background text-n-slate-12 hover:bg-n-alpha-2',
+              ]"
+              @click="selectNpsScore(score)"
+            >
+              {{ score }}
+            </button>
+          </div>
+          <textarea
+            v-model="npsComment"
+            class="mb-4 min-h-[96px] w-full rounded-lg border border-n-weak bg-n-background px-3 py-2 text-sm text-n-slate-12 outline-none focus:border-n-brand"
+            :placeholder="$t('SURVEY.NPS.PLACEHOLDER')"
+          />
+          <button
+            type="button"
+            class="rounded-lg bg-n-brand px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-50"
+            :disabled="isNpsButtonDisabled"
+            @click="submitNps"
+          >
+            {{ $t('SURVEY.NPS.BUTTON_TEXT') }}
+          </button>
+        </div>
+        <p v-if="isNpsSubmitted" class="mt-6 text-sm text-n-slate-11">
+          {{ $t('SURVEY.NPS.SUCCESS_MESSAGE') }}
+        </p>
       </div>
       <div class="mb-3">
         <Branding />

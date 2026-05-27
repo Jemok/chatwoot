@@ -11,9 +11,6 @@ const loading = ref(false);
 const error = ref(null);
 const days = ref(30);
 
-const newScore = ref(9);
-const newComment = ref('');
-
 const refresh = async () => {
   loading.value = true;
   error.value = null;
@@ -29,29 +26,6 @@ const refresh = async () => {
     error.value = e.response?.data?.error || e.message;
   } finally {
     loading.value = false;
-  }
-};
-
-const recordSample = async () => {
-  // demo helper: pick first contact in account
-  try {
-    const contacts = await axios.get(
-      `/api/v1/accounts/${accountId.value}/contacts?page=1`
-    );
-    const contactId = contacts.data?.payload?.[0]?.id;
-    if (!contactId) {
-      error.value = 'No contact available to attach NPS to.';
-      return;
-    }
-    await axios.post(`/api/v1/accounts/${accountId.value}/nps_responses`, {
-      contact_id: contactId,
-      score: newScore.value,
-      comment: newComment.value,
-    });
-    newComment.value = '';
-    await refresh();
-  } catch (e) {
-    error.value = e.response?.data?.error || e.message;
   }
 };
 
@@ -142,34 +116,6 @@ onMounted(refresh);
         <div class="text-3xl font-semibold text-rose-700 mt-1">
           {{ data.breakdown.detractors }}
         </div>
-      </div>
-    </section>
-
-    <!-- Demo entry helper -->
-    <section class="rounded-xl border border-n-weak bg-n-solid-1 p-4 mb-6">
-      <h2 class="text-sm font-semibold text-n-slate-12 mb-2">
-        🎬 Record a sample response (attaches to first contact)
-      </h2>
-      <div class="flex flex-wrap items-center gap-2">
-        <label class="text-sm text-n-slate-11">Score</label>
-        <select
-          v-model.number="newScore"
-          class="text-sm rounded border border-n-weak bg-n-background px-2 py-1"
-        >
-          <option v-for="n in 11" :key="n" :value="n - 1">{{ n - 1 }}</option>
-        </select>
-        <input
-          v-model="newComment"
-          placeholder="Optional comment"
-          class="flex-1 min-w-[200px] text-sm rounded border border-n-weak bg-n-background px-2 py-1"
-        />
-        <button
-          type="button"
-          class="px-3 py-1 rounded bg-emerald-600 text-white text-sm hover:bg-emerald-700"
-          @click="recordSample"
-        >
-          Record
-        </button>
       </div>
     </section>
 

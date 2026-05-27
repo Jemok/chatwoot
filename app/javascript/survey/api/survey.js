@@ -9,7 +9,7 @@ const getSurveyDetails = async ({ uuid }) => {
 
 const updateSurvey = async ({ uuid, data }) => {
   const urlData = endPoints.updateSurvey({ data, uuid });
-  await API.put(urlData.url, { ...urlData.data });
+  return API.put(urlData.url, { ...urlData.data });
 };
 
 export { getSurveyDetails, updateSurvey };

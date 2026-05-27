@@ -527,6 +527,16 @@ const menuItems = computed(() => {
           label: t('SIDEBAR.REPORTS_BOT'),
           to: accountScopedRoute('bot_reports'),
         },
+        {
+          name: 'Reports NPS',
+          label: t('SIDEBAR.NPS_REPORT'),
+          to: accountScopedRoute('nps_report'),
+        },
+        {
+          name: 'Reports Audit Trail',
+          label: t('SIDEBAR.AUDIT_TRAIL'),
+          to: accountScopedRoute('audit_trail'),
+        },
       ],
     },
     {
@@ -750,101 +760,6 @@ const menuItems = computed(() => {
         },
       ],
     },
-    ...(store.getters.getCurrentRole === 'administrator'
-      ? [
-          {
-            name: 'Banking Demo',
-            label: t('SIDEBAR.BANKING_DEMO'),
-            icon: 'i-lucide-landmark',
-            children: [
-              {
-                name: 'Demo Control Panel',
-                label: t('SIDEBAR.DEMO_CONTROL_PANEL'),
-                icon: 'i-lucide-sliders',
-                to: accountScopedRoute('demo_control_panel'),
-              },
-              {
-                name: 'Moderation Center',
-                label: t('SIDEBAR.MODERATION_CENTER'),
-                icon: 'i-lucide-shield-alert',
-                to: accountScopedRoute('moderation_center'),
-              },
-              {
-                name: 'Filtered Inbox',
-                label: t('SIDEBAR.FILTERED_INBOX'),
-                icon: 'i-lucide-filter',
-                to: accountScopedRoute('filtered_inbox'),
-              },
-              {
-                name: 'Audit Trail',
-                label: t('SIDEBAR.AUDIT_TRAIL'),
-                icon: 'i-lucide-scroll-text',
-                to: accountScopedRoute('audit_trail'),
-              },
-              {
-                name: 'Security Dashboard',
-                label: t('SIDEBAR.SECURITY_DASHBOARD'),
-                icon: 'i-lucide-shield-check',
-                to: accountScopedRoute('security_dashboard'),
-              },
-              {
-                name: 'Channel Performance',
-                label: t('SIDEBAR.CHANNEL_PERFORMANCE'),
-                icon: 'i-lucide-activity',
-                to: accountScopedRoute('channel_performance'),
-              },
-              {
-                name: 'NPS Report',
-                label: t('SIDEBAR.NPS_REPORT'),
-                icon: 'i-lucide-gauge',
-                to: accountScopedRoute('nps_report'),
-              },
-              {
-                name: 'CSAT Banking',
-                label: t('SIDEBAR.CSAT_BANKING'),
-                icon: 'i-lucide-smile',
-                to: accountScopedRoute('csat_banking'),
-              },
-              {
-                name: 'Routing Mode',
-                label: t('SIDEBAR.ROUTING_MODE'),
-                icon: 'i-lucide-route',
-                to: accountScopedRoute('routing_mode_admin'),
-              },
-              {
-                name: 'Blocked Profiles',
-                label: t('SIDEBAR.BLOCKED_PROFILES'),
-                icon: 'i-lucide-user-x',
-                to: accountScopedRoute('blocked_profiles_admin'),
-              },
-              {
-                name: 'Users Lifecycle',
-                label: t('SIDEBAR.USERS_LIFECYCLE'),
-                icon: 'i-lucide-calendar-clock',
-                to: accountScopedRoute('users_lifecycle'),
-              },
-              {
-                name: 'Shifts',
-                label: t('SIDEBAR.SHIFTS'),
-                icon: 'i-lucide-clock',
-                to: accountScopedRoute('shifts_admin'),
-              },
-              {
-                name: 'Demo Coverage Map',
-                label: t('SIDEBAR.DEMO_COVERAGE'),
-                icon: 'i-lucide-map',
-                to: accountScopedRoute('demo_coverage_map'),
-              },
-              {
-                name: 'Architecture View',
-                label: t('SIDEBAR.ARCHITECTURE_VIEW'),
-                icon: 'i-lucide-network',
-                to: accountScopedRoute('architecture_view'),
-              },
-            ],
-          },
-        ]
-      : []),
   ];
 });
 </script>
