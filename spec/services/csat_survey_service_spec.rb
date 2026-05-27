@@ -215,6 +215,16 @@ describe CsatSurveyService do
           csat_message = whatsapp_conversation.messages.where(content_type: :input_csat).last
           expect(csat_message.content).to eq('Please rate this conversation')
         end
+
+        it 'sends another template survey when a CSAT survey was already sent' do
+          create(:message, conversation: whatsapp_conversation, account: account, inbox: whatsapp_inbox,
+                           message_type: :outgoing, content_type: :input_csat)
+          mock_successful_template_send('123456789')
+
+          whatsapp_service.perform
+
+          expect(mock_provider_service).to have_received(:send_template)
+        end
       end
 
       context 'when template is not available or not approved' do

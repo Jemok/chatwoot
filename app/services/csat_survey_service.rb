@@ -18,7 +18,7 @@ class CsatSurveyService
   delegate :inbox, :contact, to: :conversation
 
   def should_send_csat_survey?
-    conversation_allows_csat? && csat_attached_to_inbox? && !csat_already_sent?
+    conversation_allows_csat? && csat_attached_to_inbox? && (approved_template_available? || !csat_already_sent?)
   end
 
   def conversation_allows_csat?
@@ -33,38 +33,46 @@ class CsatSurveyService
     conversation.messages.where(content_type: :input_csat).present?
   end
 
+  def approved_template_available?
+    (whatsapp_channel? && template_available_and_approved?) || (inbox.twilio_whatsapp? && twilio_template_available_and_approved?)
+  end
+
   def whatsapp_channel?
     inbox.channel_type == 'Channel::Whatsapp'
   end
 
   def template_available_and_approved?
+    return @template_available_and_approved if defined?(@template_available_and_approved)
+
     template_config = inbox.csat_config&.dig('template')
-    return false unless template_config
+    return @template_available_and_approved = false unless template_config
 
     template_name = template_config['name'] || CsatTemplateNameService.csat_template_name(inbox.id)
 
     status_result = inbox.channel.provider_service.get_template_status(template_name)
 
-    status_result[:success] && status_result[:template][:status] == 'APPROVED'
+    @template_available_and_approved = status_result[:success] && status_result[:template][:status] == 'APPROVED'
   rescue StandardError => e
     Rails.logger.error "Error checking CSAT template status: #{e.message}"
-    false
+    @template_available_and_approved = false
   end
 
   def twilio_template_available_and_approved?
+    return @twilio_template_available_and_approved if defined?(@twilio_template_available_and_approved)
+
     template_config = inbox.csat_config&.dig('template')
-    return false unless template_config
+    return @twilio_template_available_and_approved = false unless template_config
 
     content_sid = template_config['content_sid']
-    return false unless content_sid
+    return @twilio_template_available_and_approved = false unless content_sid
 
     template_service = Twilio::CsatTemplateService.new(inbox.channel)
     status_result = template_service.get_template_status(content_sid)
 
-    status_result[:success] && status_result[:template][:status] == 'approved'
+    @twilio_template_available_and_approved = status_result[:success] && status_result[:template][:status] == 'approved'
   rescue StandardError => e
     Rails.logger.error "Error checking Twilio CSAT template status: #{e.message}"
-    false
+    @twilio_template_available_and_approved = false
   end
 
   def send_whatsapp_template_survey

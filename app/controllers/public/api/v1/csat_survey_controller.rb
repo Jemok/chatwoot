@@ -19,7 +19,7 @@ class Public::Api::V1::CsatSurveyController < PublicController
   end
 
   def set_message
-    @message = @conversation.messages.find_by!(content_type: 'input_csat')
+    @message = @conversation.messages.where(content_type: 'input_csat').reorder(id: :desc).first!
   end
 
   def message_update_params

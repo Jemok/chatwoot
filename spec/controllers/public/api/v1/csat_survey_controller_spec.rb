@@ -37,6 +37,20 @@ RSpec.describe 'Public Survey Responses API', type: :request do
       expect(data['csat_survey_response']['rating']).to eq 4
     end
 
+    it 'updates the latest CSAT survey response when multiple surveys exist for the conversation' do
+      conversation = create(:conversation)
+      create(:message, conversation: conversation, content_type: 'input_csat', created_at: 2.days.ago)
+      latest_message = create(:message, conversation: conversation, content_type: 'input_csat', created_at: 1.day.ago)
+      create(:csat_survey_response, conversation: conversation, message: latest_message, rating: 4, feedback_message: 'amazing experience')
+
+      patch "/public/api/v1/csat_survey/#{conversation.uuid}",
+            params: params,
+            as: :json
+
+      expect(response).to have_http_status(:success)
+      expect(response.parsed_body['id']).to eq latest_message.id
+    end
+
     it 'returns update error if CSAT message sent more than 14 days' do
       conversation = create(:conversation)
       message = create(:message, conversation: conversation, content_type: 'input_csat', created_at: 15.days.ago)
