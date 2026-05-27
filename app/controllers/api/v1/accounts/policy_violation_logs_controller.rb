@@ -1,5 +1,9 @@
 class Api::V1::Accounts::PolicyViolationLogsController < Api::V1::Accounts::BaseController
-  before_action :check_authorization
+  skip_before_action :authenticate_access_token!, only: [:create]
+  skip_before_action :validate_bot_access_token!, only: [:create]
+  skip_before_action :authenticate_user!, only: [:create]
+
+  before_action :check_authorization, unless: :audit_log_secret_authentic?
 
   PER_PAGE_DEFAULT = 25
   PER_PAGE_MAX = 100
@@ -17,6 +21,12 @@ class Api::V1::Accounts::PolicyViolationLogsController < Api::V1::Accounts::Base
     }
   end
 
+  def create
+    record = PolicyViolationLog.create!(permitted_payload.merge(account: Current.account))
+
+    render json: { data: serialize(record) }, status: :created
+  end
+
   private
 
   def serialize(record)
@@ -28,7 +38,42 @@ class Api::V1::Accounts::PolicyViolationLogsController < Api::V1::Accounts::Base
   end
 
   def check_authorization
-    authorize PolicyViolationLog, :index?
+    authorize PolicyViolationLog, "#{action_name}?".to_sym
+  end
+
+  def audit_log_secret_authentic?
+    return @audit_log_secret_authentic if defined?(@audit_log_secret_authentic)
+
+    expected_secret = ENV.fetch('AUDIT_LOG_SECRET', nil)
+    provided_secret = request.headers['X-Audit-Log-Secret'].to_s
+
+    @audit_log_secret_authentic = audit_log_secret_configured?(expected_secret) && provided_secret.present? &&
+                                  secure_secret_compare(provided_secret, expected_secret)
+  end
+
+  def audit_log_secret_configured?(secret)
+    secret.present? && secret != 'replace_with_secure_shared_secret'
+  end
+
+  def secure_secret_compare(provided_secret, expected_secret)
+    provided_digest = OpenSSL::Digest::SHA256.hexdigest(provided_secret)
+    expected_digest = OpenSSL::Digest::SHA256.hexdigest(expected_secret)
+
+    ActiveSupport::SecurityUtils.secure_compare(provided_digest, expected_digest)
+  end
+
+  def permitted_payload
+    payload = params[:policy_violation_log].presence || params
+
+    {
+      policy: payload[:policy],
+      action_attempted: payload[:action_attempted],
+      details: payload[:details],
+      request_ip: payload[:request_ip],
+      conversation_id: payload[:conversation_id],
+      inbox_id: payload[:inbox_id],
+      user_id: payload[:user_id]
+    }
   end
 
   def apply_filters(scope)

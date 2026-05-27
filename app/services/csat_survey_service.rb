@@ -8,10 +8,8 @@ class CsatSurveyService
       send_whatsapp_template_survey
     elsif inbox.twilio_whatsapp? && twilio_template_available_and_approved?
       send_twilio_whatsapp_template_survey
-    elsif within_messaging_window?
-      ::MessageTemplates::Template::CsatSurvey.new(conversation: conversation).perform
     else
-      create_csat_not_sent_activity_message
+      ::MessageTemplates::Template::CsatSurvey.new(conversation: conversation).perform
     end
   end
 
@@ -20,54 +18,19 @@ class CsatSurveyService
   delegate :inbox, :contact, to: :conversation
 
   def should_send_csat_survey?
-    conversation_allows_csat? && csat_enabled? && !csat_already_sent? && csat_allowed_by_survey_rules?
+    conversation_allows_csat? && csat_attached_to_inbox? && !csat_already_sent?
   end
 
   def conversation_allows_csat?
     conversation.resolved? && !conversation.tweet?
   end
 
-  def csat_enabled?
-    inbox.csat_survey_enabled?
+  def csat_attached_to_inbox?
+    inbox.csat_survey_enabled? || csat_config['message'].present? || csat_config['template'].present?
   end
 
   def csat_already_sent?
     conversation.messages.where(content_type: :input_csat).present?
-  end
-
-  def within_messaging_window?
-    conversation.can_reply?
-  end
-
-  def csat_allowed_by_survey_rules?
-    return true unless survey_rules_configured?
-
-    labels = conversation.label_list
-    return true if rule_values.empty?
-
-    case rule_operator
-    when 'contains'
-      rule_values.any? { |label| labels.include?(label) }
-    when 'does_not_contain'
-      rule_values.none? { |label| labels.include?(label) }
-    else
-      true
-    end
-  end
-
-  def survey_rules_configured?
-    return false if csat_config.blank?
-    return false if csat_config['survey_rules'].blank?
-
-    rule_values.any?
-  end
-
-  def rule_operator
-    csat_config.dig('survey_rules', 'operator') || 'contains'
-  end
-
-  def rule_values
-    csat_config.dig('survey_rules', 'values') || []
   end
 
   def whatsapp_channel?
@@ -166,16 +129,5 @@ class CsatSurveyService
     message.update!(source_id: result[:message_id]) if result[:success] && result[:message_id].present?
   rescue StandardError => e
     Rails.logger.error "Error sending Twilio WhatsApp CSAT template for conversation #{conversation.id}: #{e.message}"
-  end
-
-  def create_csat_not_sent_activity_message
-    content = I18n.t('conversations.activity.csat.not_sent_due_to_messaging_window')
-    activity_message_params = {
-      account_id: conversation.account_id,
-      inbox_id: conversation.inbox_id,
-      message_type: :activity,
-      content: content
-    }
-    ::Conversations::ActivityMessageJob.perform_later(conversation, activity_message_params) if content
   end
 end

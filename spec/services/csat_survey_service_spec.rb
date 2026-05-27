@@ -35,14 +35,12 @@ describe CsatSurveyService do
         allow(conversation).to receive(:can_reply?).and_return(false)
       end
 
-      it 'creates activity message instead of sending survey' do
+      it 'sends CSAT survey' do
         service.perform
 
-        expect(Conversations::ActivityMessageJob).to have_received(:perform_later).with(
-          conversation,
-          hash_including(content: I18n.t('conversations.activity.csat.not_sent_due_to_messaging_window'))
-        )
-        expect(MessageTemplates::Template::CsatSurvey).not_to have_received(:new)
+        expect(MessageTemplates::Template::CsatSurvey).to have_received(:new).with(conversation: conversation)
+        expect(csat_template).to have_received(:perform)
+        expect(Conversations::ActivityMessageJob).not_to have_received(:perform_later)
       end
     end
 
@@ -100,11 +98,11 @@ describe CsatSurveyService do
           conversation.update(label_list: ['bot-detectado'])
         end
 
-        it 'does not send CSAT' do
+        it 'sends CSAT' do
           service.perform
 
-          expect(MessageTemplates::Template::CsatSurvey).not_to have_received(:new)
-          expect(conversation.messages.where(content_type: :input_csat)).to be_empty
+          expect(MessageTemplates::Template::CsatSurvey).to have_received(:new).with(conversation: conversation)
+          expect(csat_template).to have_received(:perform)
         end
       end
     end
@@ -315,14 +313,12 @@ describe CsatSurveyService do
           # No activity message should be created when template is successfully sent
         end
 
-        it 'creates activity message when template is not available and outside window' do
+        it 'sends regular survey when template is not available and outside window' do
           whatsapp_service.perform
 
-          expect(Conversations::ActivityMessageJob).to have_received(:perform_later).with(
-            whatsapp_conversation,
-            hash_including(content: I18n.t('conversations.activity.csat.not_sent_due_to_messaging_window'))
-          )
-          expect(MessageTemplates::Template::CsatSurvey).not_to have_received(:new)
+          expect(MessageTemplates::Template::CsatSurvey).to have_received(:new).with(conversation: whatsapp_conversation)
+          expect(csat_template).to have_received(:perform)
+          expect(Conversations::ActivityMessageJob).not_to have_received(:perform_later)
         end
       end
 
@@ -339,13 +335,15 @@ describe CsatSurveyService do
           whatsapp_conversation.update(label_list: ['bot-detectado'])
         end
 
-        it 'does not call WhatsApp template or create a CSAT message' do
-          expect(mock_provider_service).not_to receive(:get_template_status)
-          expect(mock_provider_service).not_to receive(:send_template)
+        it 'sends CSAT' do
+          allow(mock_provider_service).to receive(:get_template_status)
+            .with('customer_survey_template')
+            .and_return({ success: false, error: 'Template not found' })
 
           whatsapp_service.perform
 
-          expect(whatsapp_conversation.messages.where(content_type: :input_csat)).to be_empty
+          expect(MessageTemplates::Template::CsatSurvey).to have_received(:new).with(conversation: whatsapp_conversation)
+          expect(csat_template).to have_received(:perform)
         end
       end
     end

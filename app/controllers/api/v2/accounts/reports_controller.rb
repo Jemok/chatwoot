@@ -2,7 +2,12 @@ class Api::V2::Accounts::ReportsController < Api::V1::Accounts::BaseController
   include Api::V2::Accounts::ReportsHelper
   include Api::V2::Accounts::HeatmapHelper
 
-  before_action :check_authorization
+  skip_before_action :authenticate_access_token!, only: [:bot_metrics_events]
+  skip_before_action :validate_bot_access_token!, only: [:bot_metrics_events]
+  skip_before_action :authenticate_user!, only: [:bot_metrics_events]
+
+  before_action :authenticate_bot_report_secret!, only: [:bot_metrics_events]
+  before_action :check_authorization, except: [:bot_metrics_events]
 
   def index
     builder = V2::Reports::Conversations::ReportBuilder.new(Current.account, report_params)
@@ -62,6 +67,17 @@ class Api::V2::Accounts::ReportsController < Api::V1::Accounts::BaseController
     render json: bot_metrics
   end
 
+  def bot_metrics_events
+    records = Reports::BotMetricsEventIngestionService.new(
+      account: Current.account,
+      payloads: bot_metric_event_payloads
+    ).perform
+
+    render json: { data: records.map { |record| serialize_bot_metric_event(record) } }, status: :created
+  rescue Reports::BotMetricsEventIngestionService::UnsupportedEventError => e
+    render_invalid_bot_metric_event(e.payload)
+  end
+
   def inbox_label_matrix
     builder = V2::Reports::InboxLabelMatrixBuilder.new(
       account: Current.account,
@@ -97,6 +113,48 @@ class Api::V2::Accounts::ReportsController < Api::V1::Accounts::BaseController
 
   def check_authorization
     authorize :report, :view?
+  end
+
+  def bot_report_secret_authentic?
+    return @bot_report_secret_authentic if defined?(@bot_report_secret_authentic)
+
+    expected_secret = ENV['BOT_REPORT_SECRET'].presence || ENV.fetch('AUDIT_LOG_SECRET', nil)
+    provided_secret = request.headers['X-Bot-Report-Secret'].presence || request.headers['X-Audit-Log-Secret'].to_s
+
+    @bot_report_secret_authentic = bot_report_secret_configured?(expected_secret) && provided_secret.present? &&
+                                   secure_secret_compare(provided_secret, expected_secret)
+  end
+
+  def authenticate_bot_report_secret!
+    render_unauthorized('Invalid Bot Report Secret') unless bot_report_secret_authentic?
+  end
+
+  def bot_report_secret_configured?(secret)
+    secret.present? && secret != 'replace_with_secure_shared_secret'
+  end
+
+  def secure_secret_compare(provided_secret, expected_secret)
+    provided_digest = OpenSSL::Digest::SHA256.hexdigest(provided_secret)
+    expected_digest = OpenSSL::Digest::SHA256.hexdigest(expected_secret)
+
+    ActiveSupport::SecurityUtils.secure_compare(provided_digest, expected_digest)
+  end
+
+  def bot_metric_event_payloads
+    params[:events].presence || [params[:bot_metric_event].presence || params]
+  end
+
+  def render_invalid_bot_metric_event(payload)
+    render json: {
+      error: 'Unsupported bot metric event',
+      supported_event_types: Reports::BotMetricsEventIngestionService::EVENT_NAME_BY_TYPE.keys,
+      supported_names: Reports::BotMetricsEventIngestionService::EVENT_NAMES,
+      received: payload.slice(:event_type, :name)
+    }, status: :unprocessable_content
+  end
+
+  def serialize_bot_metric_event(record)
+    record.as_json(only: [:id, :name, :value, :inbox_id, :user_id, :conversation_id, :created_at])
   end
 
   def common_params

@@ -21,6 +21,10 @@ const POLICIES = [
   { value: 'user_lifecycle', label: 'AUDIT_TRAIL.POLICY.USER_LIFECYCLE' },
   { value: 'profile_block', label: 'AUDIT_TRAIL.POLICY.PROFILE_BLOCK' },
   { value: 'routing_override', label: 'AUDIT_TRAIL.POLICY.ROUTING_OVERRIDE' },
+  {
+    value: 'external_chatbot_activity',
+    label: 'AUDIT_TRAIL.POLICY.EXTERNAL_CHATBOT_ACTIVITY',
+  },
 ];
 
 const CHANNELS = [

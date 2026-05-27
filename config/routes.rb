@@ -89,7 +89,7 @@ Rails.application.routes.draw do
               post  ':conversation_id/heartbeat', action: :heartbeat
             end
           end
-          resources :policy_violation_logs, only: [:index]
+          resources :policy_violation_logs, only: [:index, :create]
           resources :moderated_messages, only: [:index]
           resources :blocked_profiles, only: [:index, :create, :destroy]
           resources :public_comments, only: [:index], controller: 'public_comments'
@@ -530,6 +530,7 @@ Rails.application.routes.draw do
               get :conversations_summary
               get :conversation_traffic
               get :bot_metrics
+              post :bot_metrics_events
               get :inbox_label_matrix
               get :first_response_time_distribution
               get :outgoing_messages_count

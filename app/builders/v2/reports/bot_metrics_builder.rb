@@ -9,8 +9,8 @@ class V2::Reports::BotMetricsBuilder
 
   def metrics
     {
-      conversation_count: bot_conversations.count,
-      message_count: bot_messages.count,
+      conversation_count: bot_conversations_count,
+      message_count: bot_messages_count,
       resolution_rate: bot_resolution_rate.to_i,
       handoff_rate: bot_handoff_rate.to_i
     }
@@ -30,25 +30,51 @@ class V2::Reports::BotMetricsBuilder
     @bot_messages ||= account.messages.outgoing.where(conversation_id: bot_conversations.ids).where(created_at: range)
   end
 
+  def bot_conversations_count
+    bot_conversations.count + external_bot_event_value('external_bot_conversation')
+  end
+
+  def bot_messages_count
+    bot_messages.count + external_bot_event_value('external_bot_response')
+  end
+
   def bot_resolutions_count
-    account.reporting_events.joins(:conversation).select(:conversation_id).where(account_id: account.id, name: :conversation_bot_resolved,
-                                                                                 created_at: range).distinct.count
+    internal_bot_resolutions_count + external_bot_event_value('external_bot_resolved')
   end
 
   def bot_handoffs_count
-    account.reporting_events.joins(:conversation).select(:conversation_id).where(account_id: account.id, name: :conversation_bot_handoff,
-                                                                                 created_at: range).distinct.count
+    internal_bot_handoffs_count + external_bot_event_value('external_bot_handoff')
+  end
+
+  def internal_bot_resolutions_count
+    account.reporting_events.joins(:conversation).select(:conversation_id).where(
+      account_id: account.id,
+      name: :conversation_bot_resolved,
+      created_at: range
+    ).distinct.count
+  end
+
+  def internal_bot_handoffs_count
+    account.reporting_events.joins(:conversation).select(:conversation_id).where(
+      account_id: account.id,
+      name: :conversation_bot_handoff,
+      created_at: range
+    ).distinct.count
+  end
+
+  def external_bot_event_value(name)
+    account.reporting_events.where(account_id: account.id, name: name, created_at: range).sum(:value).to_i
   end
 
   def bot_resolution_rate
-    return 0 if bot_conversations.count.zero?
+    return 0 if bot_conversations_count.zero?
 
-    bot_resolutions_count.to_f / bot_conversations.count * 100
+    bot_resolutions_count.to_f / bot_conversations_count * 100
   end
 
   def bot_handoff_rate
-    return 0 if bot_conversations.count.zero?
+    return 0 if bot_conversations_count.zero?
 
-    bot_handoffs_count.to_f / bot_conversations.count * 100
+    bot_handoffs_count.to_f / bot_conversations_count * 100
   end
 end

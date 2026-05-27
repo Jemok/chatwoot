@@ -3,6 +3,10 @@ class PolicyViolationLogPolicy < ApplicationPolicy
     @account_user&.administrator?
   end
 
+  def create?
+    index? || @user.is_a?(AgentBot)
+  end
+
   def view?
     index?
   end

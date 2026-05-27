@@ -23,7 +23,8 @@
       "MODERATION_ACTION": "Moderation action",
       "USER_LIFECYCLE": "User lifecycle",
       "PROFILE_BLOCK": "Profile block",
-      "ROUTING_OVERRIDE": "Routing override"
+      "ROUTING_OVERRIDE": "Routing override",
+      "EXTERNAL_CHATBOT_ACTIVITY": "External chatbot activity"
     },
     "SECTIONS": {
       "MODERATED": "Deleted / Moderated Messages",

@@ -1,4 +1,9 @@
 class V2::Reports::Timeseries::CountReportBuilder < V2::Reports::Timeseries::BaseTimeseriesBuilder
+  EXTERNAL_BOT_EVENT_BY_METRIC = {
+    'bot_resolutions_count' => 'external_bot_resolved',
+    'bot_handoffs_count' => 'external_bot_handoff'
+  }.freeze
+
   def timeseries
     grouped_count.each_with_object([]) do |element, arr|
       event_date, event_count = element
@@ -12,7 +17,9 @@ class V2::Reports::Timeseries::CountReportBuilder < V2::Reports::Timeseries::Bas
   end
 
   def aggregate_value
-    object_scope.count
+    return object_scope.count unless external_bot_event_name
+
+    object_scope.count + external_bot_event_scope.sum(:value).to_i
   end
 
   private
@@ -23,6 +30,18 @@ class V2::Reports::Timeseries::CountReportBuilder < V2::Reports::Timeseries::Bas
 
   def object_scope
     send("scope_for_#{metric}")
+  end
+
+  def external_bot_event_name
+    EXTERNAL_BOT_EVENT_BY_METRIC[metric]
+  end
+
+  def external_bot_event_scope
+    scope.reporting_events.where(
+      account_id: account.id,
+      name: external_bot_event_name,
+      created_at: range
+    )
   end
 
   def scope_for_conversations_count
@@ -66,7 +85,7 @@ class V2::Reports::Timeseries::CountReportBuilder < V2::Reports::Timeseries::Bas
     # It converts timestamps to the target timezone before grouping, which means
     # the same event can fall into different day buckets depending on timezone
     # Example: 2024-01-15 00:00 UTC becomes 2024-01-14 16:00 PST (falls on different day)
-    @grouped_values = object_scope.group_by_period(
+    internal_grouped_count = object_scope.group_by_period(
       group_by,
       :created_at,
       default_value: 0,
@@ -74,5 +93,18 @@ class V2::Reports::Timeseries::CountReportBuilder < V2::Reports::Timeseries::Bas
       permit: %w[day week month year hour],
       time_zone: timezone
     ).count
+
+    return internal_grouped_count unless external_bot_event_name
+
+    external_grouped_count = external_bot_event_scope.group_by_period(
+      group_by,
+      :created_at,
+      default_value: 0,
+      range: range,
+      permit: %w[day week month year hour],
+      time_zone: timezone
+    ).sum(:value)
+
+    internal_grouped_count.merge(external_grouped_count) { |_date, internal_count, external_count| internal_count + external_count }
   end
 end
