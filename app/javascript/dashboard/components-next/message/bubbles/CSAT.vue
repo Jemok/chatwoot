@@ -12,8 +12,18 @@ const response = computed(() => {
   return contentAttributes.value?.submittedValues?.csatSurveyResponse ?? {};
 });
 
+const npsResponse = computed(() => {
+  return contentAttributes.value?.submittedValues?.npsResponse ?? {};
+});
+
 const isRatingSubmitted = computed(() => {
   return !!response.value.rating;
+});
+
+const isNpsSubmitted = computed(() => {
+  return (
+    npsResponse.value.score !== undefined && npsResponse.value.score !== null
+  );
 });
 
 const displayType = computed(() => {
@@ -65,6 +75,18 @@ const starRatingValue = computed(() => {
         {{ t('CONVERSATION.FEEDBACK_TITLE') }}
       </dt>
       <dd>{{ response.feedbackMessage }}</dd>
+
+      <dt v-if="isNpsSubmitted" class="text-n-slate-11 italic mt-2">
+        {{ t('CONVERSATION.NPS_TITLE') }}
+      </dt>
+      <dd v-if="isNpsSubmitted">
+        {{ t('CONVERSATION.NPS_SCORE_VALUE', { score: npsResponse.score }) }}
+      </dd>
+
+      <dt v-if="npsResponse.comment" class="text-n-slate-11 italic mt-2">
+        {{ t('CONVERSATION.NPS_COMMENT_TITLE') }}
+      </dt>
+      <dd v-if="npsResponse.comment">{{ npsResponse.comment }}</dd>
     </dl>
   </BaseBubble>
 </template>

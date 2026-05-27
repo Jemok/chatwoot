@@ -53,7 +53,7 @@ RSpec.describe 'Public Survey Responses API', type: :request do
 
     it 'creates an NPS response from the public survey form' do
       conversation = create(:conversation)
-      create(:message, conversation: conversation, account: conversation.account, inbox: conversation.inbox, content_type: 'input_csat')
+      message = create(:message, conversation: conversation, account: conversation.account, inbox: conversation.inbox, content_type: 'input_csat')
       payload = {
         message: {
           submitted_values: {
@@ -75,6 +75,11 @@ RSpec.describe 'Public Survey Responses API', type: :request do
       expect(nps_response.comment).to eq 'Very likely'
       expect(nps_response.contact).to eq conversation.contact
       expect(response.parsed_body['nps_response']['id']).to eq nps_response.id
+      expect(message.reload.content_attributes.dig('submitted_values', 'nps_response')).to include(
+        'id' => nps_response.id,
+        'score' => 10,
+        'comment' => 'Very likely'
+      )
     end
 
     it 'returns update error if CSAT message sent more than 14 days' do

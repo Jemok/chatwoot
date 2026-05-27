@@ -88,6 +88,9 @@
     "RESPONSE": "Response",
     "RATING_TITLE": "Rating",
     "FEEDBACK_TITLE": "Feedback",
+    "NPS_TITLE": "NPS score",
+    "NPS_SCORE_VALUE": "{score}/10",
+    "NPS_COMMENT_TITLE": "NPS comment",
     "REPLY_MESSAGE_NOT_FOUND": "Message not available",
     "CARD": {
       "SHOW_LABELS": "Show labels",
